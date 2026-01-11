@@ -212,6 +212,9 @@ export default function App() {
               ))}
             </div>
           )}
+          {/*footer*/}
+          <div className="mt-8 text-center text-gray-400 text-sm">
+            &copy; 2026 AWI. Todos los derechos reservados.</div>
         </div>
       </div>
     </div>
