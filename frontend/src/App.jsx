@@ -60,17 +60,34 @@ export default function App() {
     }
   };
 
-  const cambiarEstado = async (id, nuevoEstado) => {
+  const cambiarEstado = async (id, estadoActual, nombreHabito) => {
     try {
-      const res = await fetch(`${API_URL}/lista-habitos/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ estado: nuevoEstado })
-      });
+      if (estadoActual === 'por hacer') {
+        // Marcar como hecho
+        const res = await fetch(`${API_URL}/lista-habitos/${id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ estado: 'hecho' })
+        });
 
-      if (!res.ok) throw new Error('Error al actualizar');
+        if (!res.ok) throw new Error('Error al actualizar');
+      } else {
+        // Desmarcar = eliminar de la lista con confirmación
+        const confirmar = window.confirm(
+          `¿Quitar "${nombreHabito}" de tu lista? Podrás agregarlo nuevamente después.`
+        );
+        
+        if (!confirmar) return;
+
+        const res = await fetch(`${API_URL}/lista-habitos/${id}`, {
+          method: 'DELETE'
+        });
+
+        if (!res.ok) throw new Error('Error al eliminar');
+      }
 
       await cargarDatos();
+      setError('');
     } catch (err) {
       setError('Error al actualizar estado');
     }
@@ -186,17 +203,14 @@ export default function App() {
                     
                     <div className="flex items-center gap-3">
                       <button
-                        onClick={() => cambiarEstado(
-                          habito.id,
-                          habito.estado === 'por hacer' ? 'hecho' : 'por hacer'
-                        )}
+                        onClick={() => cambiarEstado(habito.id, habito.estado, habito.nombre)}
                         className={`px-6 py-2 rounded-lg font-medium transition-colors ${
                           habito.estado === 'hecho'
-                            ? 'bg-yellow-500 hover:bg-yellow-600 text-white'
+                            ? 'bg-red-500 hover:bg-red-600 text-white'
                             : 'bg-green-500 hover:bg-green-600 text-white'
                         }`}
                       >
-                        {habito.estado === 'hecho' ? 'Desmarcar' : 'Completar'}
+                        {habito.estado === 'hecho' ? 'Quitar' : 'Completar'}
                       </button>
                       
                       <span className={`px-4 py-2 rounded-full text-sm font-medium ${
