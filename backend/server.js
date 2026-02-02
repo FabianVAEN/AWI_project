@@ -45,4 +45,6 @@ const startServer = async () => {
     }
 };
 
+app.use('/api/usuarios', require('./routes/usuarioRoutes'));
+
 startServer();
