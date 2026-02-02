@@ -1,28 +1,42 @@
+const { DataTypes } = require('sequelize');
+const sequelize = require('../../config/database');
+
 const Usuario = sequelize.define('Usuario', {
-  id_usuario: { // PK proporcionada 
+  id: {
     type: DataTypes.INTEGER,
     primaryKey: true,
     autoIncrement: true
   },
-  username: { // Nickname del usuario 
+  username: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    unique: true
+  },
+  primer_nombre: {
     type: DataTypes.STRING,
     allowNull: false
   },
-  nombre: { // 
+  segundo_nombre: {
     type: DataTypes.STRING,
-    allowNull: false
+    allowNull: true
   },
-  apellido: { // 
+  email: {
     type: DataTypes.STRING,
-    allowNull: true // Puede no tener segundo nombre
+    unique: true,
+    allowNull: false,
+    validate: {
+      isEmail: true
+    }
   },
-  email: { // 
-    type: DataTypes.STRING,
-    unique: true, // No queremos correos duplicados
-    allowNull: false
-  },
-  Password: { // Agregado para seguridad (indispensable)
+  password: {
     type: DataTypes.STRING,
     allowNull: false
   }
-}, { tableName: 'usuarios' });
+}, { 
+  tableName: 'usuarios',
+  timestamps: true,
+  createdAt: 'created_at',
+  updatedAt: false
+});
+
+module.exports = Usuario;

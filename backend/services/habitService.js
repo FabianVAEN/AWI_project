@@ -1,78 +1,75 @@
 const HabitRepository = require('../repositories/habitRepository');
 
 class HabitService {
-    getAllDefaults() {
-        return HabitRepository.findAllDefaults();
+    async getAllDefaults() {
+        return await HabitRepository.findAllDefaults();
     }
 
-    getUserHabits() {
-        return HabitRepository.findUserHabits();
+    async getUserHabits() {
+        return await HabitRepository.findUserHabits();
     }
 
-    addHabitFromCatalog(habito_id) {
+    async addHabitFromCatalog(habito_id) {
         const numericId = parseInt(habito_id);
         if (isNaN(numericId)) {
             throw { status: 400, message: "El ID del hábito debe ser un número" };
         }
 
-        // Verificar si existe en el catálogo
-        const defaultHabit = HabitRepository.findDefaultById(numericId);
+        const defaultHabit = await HabitRepository.findDefaultById(numericId);
         if (!defaultHabit) {
             throw { status: 404, message: "Hábito no encontrado en el catálogo" };
         }
 
-        // Verificar si ya está en la lista del usuario
-        const existing = HabitRepository.findUserHabitByDefaultId(numericId);
+        const existing = await HabitRepository.findUserHabitByDefaultId(numericId);
         if (existing) {
             throw { status: 400, message: "Este hábito ya está en tu lista" };
         }
 
-        return HabitRepository.create({
+        return await HabitRepository.create({
             habito_id: defaultHabit.id,
             nombre: defaultHabit.nombre,
-            descripcion: defaultHabit.descripcion
+            descripcion: defaultHabit.descripcion_breve
         });
     }
 
-    createCustomHabit(habitData) {
+    async createCustomHabit(habitData) {
         const { nombre, descripcion } = habitData;
         if (!nombre) {
             throw { status: 400, message: "El nombre del hábito es obligatorio" };
         }
 
-        return HabitRepository.create({
-            habito_id: null, // Es un hábito personalizado
+        return await HabitRepository.create({
+            habito_id: null,
             nombre,
             descripcion: descripcion || ""
         });
     }
 
-    updateHabit(id, data) {
+    async updateHabit(id, data) {
         const numericId = parseInt(id);
         if (isNaN(numericId)) {
             throw { status: 400, message: "El ID debe ser un número" };
         }
 
-        const existing = HabitRepository.findUserHabitById(numericId);
+        const existing = await HabitRepository.findUserHabitById(numericId);
         if (!existing) {
             throw { status: 404, message: "Hábito no encontrado en tu lista" };
         }
 
-        // Validar estado si se proporciona
         if (data.estado && data.estado !== 'por hacer' && data.estado !== 'hecho') {
             throw { status: 400, message: "Estado inválido. Use 'por hacer' o 'hecho'" };
         }
 
-        return HabitRepository.update(numericId, data);
+        return await HabitRepository.update(numericId, data);
     }
 
-    deleteHabit(id) {
+    async deleteHabit(id) {
         const numericId = parseInt(id);
         if (isNaN(numericId)) {
             throw { status: 400, message: "El ID debe ser un número" };
         }
 
-        const deleted = HabitRepository.delete(numericId);
+        const deleted = await HabitRepository.delete(numericId);
         if (!deleted) {
             throw { status: 404, message: "Hábito no encontrado" };
         }

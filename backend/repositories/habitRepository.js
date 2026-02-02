@@ -1,77 +1,133 @@
+const { Habito, UsuarioHabito, Seguimiento } = require('./models');
+
 class HabitRepository {
-    constructor() {
-        // Catálogo de hábitos predeterminados
-        this.habitosDefault = [
-            { id: 1, nombre: 'Beber 8 vasos de agua', descripcion: 'Mantener hidratación adecuada durante el día' },
-            { id: 2, nombre: 'Hacer ejercicio 30 min', descripcion: 'Actividad física diaria para mantener la salud' },
-            { id: 3, nombre: 'Dormir 8 horas', descripcion: 'Descanso adecuado para recuperación' },
-            { id: 4, nombre: 'Meditar 10 minutos', descripcion: 'Práctica de mindfulness y relajación' },
-            { id: 5, nombre: 'Comer 5 porciones de frutas/verduras', descripcion: 'Nutrición balanceada' },
-            { id: 6, nombre: 'Leer 20 páginas', descripcion: 'Estimulación mental y aprendizaje' },
-            { id: 7, nombre: 'Caminar 10,000 pasos', descripcion: 'Actividad física continua' },
-            { id: 8, nombre: 'Desconectar dispositivos 1 hora antes de dormir', descripcion: 'Mejor calidad de sueño' },
-            { id: 9, nombre: 'Practicar gratitud', descripcion: 'Escribir 3 cosas por las que estás agradecido' },
-            { id: 10, nombre: 'Estiramientos matutinos', descripcion: 'Activar el cuerpo al comenzar el día' }
-        ];
-
-        // Lista de hábitos del usuario (en memoria)
-        this.listaHabitos = [];
-        this.nextId = 1;
+    // Obtener catálogo de hábitos predeterminados
+    async findAllDefaults() {
+        try {
+            return await Habito.findAll({
+                where: { es_predeterminado: true }
+            });
+        } catch (error) {
+            console.error('Error en findAllDefaults:', error);
+            throw error;
+        }
     }
 
-    // Obtener catálogo
-    findAllDefaults() {
-        return this.habitosDefault;
+    async findDefaultById(id) {
+        try {
+            return await Habito.findOne({
+                where: { id, es_predeterminado: true }
+            });
+        } catch (error) {
+            console.error('Error en findDefaultById:', error);
+            throw error;
+        }
     }
 
-    findDefaultById(id) {
-        return this.habitosDefault.find(h => h.id === id);
+    // Obtener lista del usuario (Simulando usuario_id = 1 por ahora)
+    async findUserHabits() {
+        try {
+            const suscripciones = await UsuarioHabito.findAll({
+                where: { usuario_id: 1 },
+                include: [{
+                    model: Habito,
+                    as: 'detalle_habito'
+                }]
+            });
+
+            // Mapear para mantener compatibilidad con el frontend anterior
+            return suscripciones.map(s => ({
+                id: s.id,
+                habito_id: s.habito_id,
+                nombre: s.detalle_habito.nombre,
+                descripcion: s.detalle_habito.descripcion_breve,
+                estado: 'por hacer', // Esto debería venir de la tabla Seguimiento en una versión más avanzada
+                racha_actual: s.racha_actual
+            }));
+        } catch (error) {
+            console.error('Error en findUserHabits:', error);
+            throw error;
+        }
     }
 
-    // Obtener lista del usuario
-    findUserHabits() {
-        return this.listaHabitos;
+    async findUserHabitById(id) {
+        try {
+            return await UsuarioHabito.findByPk(id);
+        } catch (error) {
+            console.error('Error en findUserHabitById:', error);
+            throw error;
+        }
     }
 
-    findUserHabitById(id) {
-        return this.listaHabitos.find(h => h.id === id);
+    async findUserHabitByDefaultId(habito_id) {
+        try {
+            return await UsuarioHabito.findOne({
+                where: { usuario_id: 1, habito_id }
+            });
+        } catch (error) {
+            console.error('Error en findUserHabitByDefaultId:', error);
+            throw error;
+        }
     }
 
-    findUserHabitByDefaultId(habito_id) {
-        return this.listaHabitos.find(h => h.habito_id === habito_id);
+    // Agregar a la lista (Suscripción)
+    async create(habitData) {
+        try {
+            // Si es un hábito personalizado (no viene del catálogo)
+            if (!habitData.habito_id) {
+                const nuevoHabito = await Habito.create({
+                    nombre: habitData.nombre,
+                    descripcion_breve: habitData.descripcion,
+                    es_predeterminado: false,
+                    usuario_id: 1
+                });
+                habitData.habito_id = nuevoHabito.id;
+            }
+
+            const suscripcion = await UsuarioHabito.create({
+                usuario_id: 1,
+                habito_id: habitData.habito_id
+            });
+
+            return {
+                ...suscripcion.toJSON(),
+                nombre: habitData.nombre,
+                descripcion: habitData.descripcion,
+                estado: 'por hacer'
+            };
+        } catch (error) {
+            console.error('Error en create:', error);
+            throw error;
+        }
     }
 
-    // Agregar a la lista
-    create(habitData) {
-    const newHabit = {
-        id: this.nextId++,
-        estado: 'por hacer', // Mantener como predeterminado
-        agregado_at: new Date().toISOString(),
-        ...habitData
-    };
-    this.listaHabitos.push(newHabit);
-    return newHabit;
+    // Actualizar hábito (Estado o Rachas)
+    async update(id, data) {
+        try {
+            const suscripcion = await UsuarioHabito.findByPk(id);
+            if (!suscripcion) return null;
+
+            await suscripcion.update(data);
+            return suscripcion;
+        } catch (error) {
+            console.error('Error en update:', error);
+            throw error;
+        }
     }
 
-    // Actualizar hábito
-    update(id, data) {
-        const index = this.listaHabitos.findIndex(h => h.id === id);
-        if (index === -1) return null;
+    // Eliminar hábito de la lista
+    async delete(id) {
+        try {
+            const suscripcion = await UsuarioHabito.findByPk(id);
+            if (!suscripcion) return null;
 
-        this.listaHabitos[index] = {
-            ...this.listaHabitos[index],
-            ...data,
-            id // Asegurar que el ID no cambie
-        };
-        return this.listaHabitos[index];
-    }
-
-    // Eliminar hábito
-    delete(id) {
-        const index = this.listaHabitos.findIndex(h => h.id === id);
-        if (index === -1) return null;
-
-        return this.listaHabitos.splice(index, 1)[0];
+            const deletedData = suscripcion.toJSON();
+            await suscripcion.destroy();
+            return deletedData;
+        } catch (error) {
+            console.error('Error en delete:', error);
+            throw error;
+        }
     }
 }
 
