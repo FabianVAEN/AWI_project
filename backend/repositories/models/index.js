@@ -1,4 +1,4 @@
-const sequelize = require('../../config/database');
+const sequelize = require('../../config/database'); // ← Correcto, igual que arriba
 const Usuario = require('./Usuario');
 const Categoria = require('./Categoria');
 const Habito = require('./Habito');

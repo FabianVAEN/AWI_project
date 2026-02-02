@@ -1,42 +1,151 @@
-const { Usuario } = require('../models'); // Importa tus modelos
+const { Usuario } = require('../repositories/models');
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+
+const JWT_SECRET = process.env.JWT_SECRET || 'awi_secreto_desarrollo';
 
 const usuarioController = {
-    // REGISTRO
     async registrar(req, res) {
         try {
             const { username, primer_nombre, segundo_nombre, email, password } = req.body;
+
+            // Validaciones básicas
+            if (!email || !password || !username) {
+                return res.status(400).json({ 
+                    error: "Email, usuario y contraseña son requeridos" 
+                });
+            }
+
+            // Verificar si usuario ya existe
+            const existeUsuario = await Usuario.findOne({ 
+                where: { email } 
+            });
+            
+            if (existeUsuario) {
+                return res.status(400).json({ 
+                    error: "El email ya está registrado" 
+                });
+            }
 
             // Encriptar contraseña
             const salt = await bcrypt.genSalt(10);
             const hashedPassword = await bcrypt.hash(password, salt);
 
+            // Crear usuario
             const nuevoUsuario = await Usuario.create({
                 username,
                 primer_nombre,
-                segundo_nombre,
+                segundo_nombre: segundo_nombre || null,
                 email,
                 password: hashedPassword
             });
 
-            res.status(201).json({ mensaje: "Usuario creado", id: nuevoUsuario.id });
+            // Generar token
+            const token = jwt.sign(
+                { 
+                    id: nuevoUsuario.id, 
+                    email: nuevoUsuario.email 
+                },
+                JWT_SECRET,
+                { expiresIn: '7d' }
+            );
+
+            // Eliminar password de la respuesta
+            const usuarioRespuesta = {
+                id: nuevoUsuario.id,
+                username: nuevoUsuario.username,
+                email: nuevoUsuario.email,
+                primer_nombre: nuevoUsuario.primer_nombre,
+                created_at: nuevoUsuario.created_at
+            };
+
+            res.status(201).json({ 
+                mensaje: "Usuario creado exitosamente",
+                token,
+                usuario: usuarioRespuesta
+            });
         } catch (error) {
-            res.status(400).json({ error: "Error al registrar: " + error.message });
+            console.error('Error en registro:', error);
+            res.status(500).json({ 
+                error: "Error en el servidor al registrar usuario" 
+            });
         }
     },
 
-    // LOGIN (Básico)
     async login(req, res) {
         try {
             const { email, password } = req.body;
-            const usuario = await Usuario.findOne({ where: { email } });
 
-            if (!usuario) return res.status(404).json({ error: "Usuario no encontrado" });
+            // Validar
+            if (!email || !password) {
+                return res.status(400).json({ 
+                    error: "Email y contraseña requeridos" 
+                });
+            }
 
+            // Buscar usuario
+            const usuario = await Usuario.findOne({ 
+                where: { email },
+                attributes: ['id', 'username', 'email', 'password', 'primer_nombre']
+            });
+
+            if (!usuario) {
+                return res.status(401).json({ 
+                    error: "Credenciales incorrectas" 
+                });
+            }
+
+            // Verificar contraseña
             const esValida = await bcrypt.compare(password, usuario.password);
-            if (!esValida) return res.status(401).json({ error: "Contraseña incorrecta" });
+            if (!esValida) {
+                return res.status(401).json({ 
+                    error: "Credenciales incorrectas" 
+                });
+            }
 
-            res.json({ mensaje: "Bienvenido", usuario: { id: usuario.id, username: usuario.username } });
+            // Generar token
+            const token = jwt.sign(
+                { 
+                    id: usuario.id, 
+                    email: usuario.email 
+                },
+                JWT_SECRET,
+                { expiresIn: '7d' }
+            );
+
+            // Respuesta sin password
+            const usuarioRespuesta = {
+                id: usuario.id,
+                username: usuario.username,
+                email: usuario.email,
+                primer_nombre: usuario.primer_nombre
+            };
+
+            res.json({ 
+                mensaje: "Inicio de sesión exitoso",
+                token,
+                usuario: usuarioRespuesta
+            });
+        } catch (error) {
+            console.error('Error en login:', error);
+            res.status(500).json({ 
+                error: "Error en el servidor al iniciar sesión" 
+            });
+        }
+    },
+
+    async perfil(req, res) {
+        try {
+            // Este endpoint necesitará middleware de autenticación
+            const usuario = await Usuario.findByPk(req.userId, {
+                attributes: { exclude: ['password'] }
+            });
+            
+            if (!usuario) {
+                return res.status(404).json({ error: "Usuario no encontrado" });
+            }
+            
+            res.json({ usuario });
         } catch (error) {
             res.status(500).json({ error: error.message });
         }
