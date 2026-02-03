@@ -1,19 +1,45 @@
+const { DataTypes } = require('sequelize');
+const sequelize = require('../../config/database');
+
 const Habito = sequelize.define('Habito', {
-  id_habito: { // PK 
+  id: {
     type: DataTypes.INTEGER,
     primaryKey: true,
     autoIncrement: true
   },
-  nombre: { // 
+  nombre: {
     type: DataTypes.STRING,
     allowNull: false
   },
-  descripcion_breve: { // Descripción breve para la Card 
+  descripcion_breve: {
     type: DataTypes.STRING,
     allowNull: false
   },
-  descripcion_larga: { // Descripción larga para el modal 
+  descripcion_larga: {
     type: DataTypes.TEXT
+  },
+  es_predeterminado: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: true
+  },
+  categoria_id: {
+    type: DataTypes.INTEGER,
+    references: {
+      model: 'categorias',
+      key: 'id'
+    }
+  },
+  usuario_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    references: {
+      model: 'usuarios',
+      key: 'id'
+    }
   }
-  // FKs como Id_categoria se crean automáticamente con las asociaciones
-}, { tableName: 'habitos' });
+}, { 
+  tableName: 'habitos',
+  timestamps: false 
+});
+
+module.exports = Habito;

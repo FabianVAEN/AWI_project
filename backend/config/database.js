@@ -4,7 +4,10 @@ const sequelize = new Sequelize('awi_db','postgres','postgres',{
     host:'localhost',
     dialect:'postgres', // Dialecto son las intricciones segun la base de datos que usemos
     port: 5435,
-    logging: true
+    logging: true,
+    define: {
+    timestamps: false   // Evita que Sequelize intente buscar las columnas 'createdAt' y 'updatedAt'
+  }
 })
 
 sequelize.authenticate()

@@ -1,5 +1,3 @@
--- Para el ini.sql
-
 -- 1. Crear extensiones o tipos necesarios
 DO $$ 
 BEGIN
