@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Button, Input } from '../components/common';
+import { Card, Button, LoadingScreen, HabitForm } from '../components/common';
 import HabitService from '../services/habitService';
 
 export default function Home() {
@@ -8,7 +8,6 @@ export default function Home() {
     const [listaHabitos, setListaHabitos] = useState([]);
     const [error, setError] = useState('');
     const [showCreateForm, setShowCreateForm] = useState(false);
-    const [formData, setFormData] = useState({ nombre: '', descripcion: '' });
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [editando, setEditando] = useState(null);
 
@@ -48,18 +47,11 @@ export default function Home() {
         }
     };
 
-    const crearHabitoPersonalizado = async (e) => {
-        e.preventDefault();
-        if (!formData.nombre.trim()) {
-            setError('El nombre del hábito es obligatorio');
-            return;
-        }
-
+    const crearHabitoPersonalizado = async (formData) => {
         try {
             setIsSubmitting(true);
             setError('');
             await HabitService.createCustomHabit(formData);
-            setFormData({ nombre: '', descripcion: '' });
             setShowCreateForm(false);
             await cargarDatos();
         } catch (err) {
@@ -69,28 +61,32 @@ export default function Home() {
         }
     };
 
-    const editarHabito = async (e) => {
-        e.preventDefault();
+    const editarHabito = async (formData) => {
         try {
             setError('');
-            await HabitService.updateHabit(editando.id, {
-            nombre: editando.nombre,
-            descripcion: editando.descripcion
-            });
+            await HabitService.updateHabit(editando.id, formData);
             setEditando(null);
             await cargarDatos();
         } catch (err) {
             setError('Error al editar hábito');
         }
-        };
+    };
 
-    const cambiarEstado = async (id, nuevoEstado) => {
+    const marcarCompletado = async (id) => {
         try {
             setError('');
-            await HabitService.updateHabit(id, { estado: nuevoEstado });
-            await cargarDatos();
+            // Obtener el hábito actual
+            const habitoActual = listaHabitos.find(h => h.id === id);
+            if (!habitoActual) return;
+
+            // Alternar estado
+            const nuevoEstado = habitoActual.estado === 'completado' ? 'pendiente' : 'completado';
+
+            await HabitService.toggleHabitStatus(id, nuevoEstado);
+            await cargarDatos(); // Esto recarga los datos
         } catch (err) {
-            setError('Error al actualizar estado');
+            setError('Error al cambiar estado del hábito');
+            console.error(err);
         }
     };
 
@@ -107,18 +103,7 @@ export default function Home() {
     };
 
     if (loading) {
-        return (
-            <div className="min-h-screen bg-gradient-to-br from-emerald-400 via-teal-500 to-cyan-600 flex items-center justify-center">
-                <div className="text-center">
-                    <h1 className="text-8xl font-bold text-white mb-4 animate-pulse">AWI</h1>
-                    <div className="flex justify-center gap-2">
-                        <div className="w-3 h-3 bg-white rounded-full animate-bounce"></div>
-                        <div className="w-3 h-3 bg-white rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                        <div className="w-3 h-3 bg-white rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                    </div>
-                </div>
-            </div>
-        );
+        return <LoadingScreen title="AWI" variant="splash" />;
     }
 
     const habitosYaAgregados = listaHabitos
@@ -172,7 +157,7 @@ export default function Home() {
                                                 {habito.nombre}
                                             </h3>
                                             <p className="text-white text-sm opacity-90">
-                                                {habito.descripcion}
+                                                {habito.descripcion_breve}
                                             </p>
                                             {yaAgregado && (
                                                 <span className="inline-block mt-3 px-3 py-1 bg-white text-gray-700 text-xs rounded-full">
@@ -199,153 +184,111 @@ export default function Home() {
                     </div>
 
                     {showCreateForm && (
-                        <Card className="max-w-2xl mx-auto">
-                            <form onSubmit={crearHabitoPersonalizado} className="space-y-4">
-                                <Input
-                                    label="Nombre del Hábito"
-                                    placeholder="Ej: Meditar 20 minutos"
-                                    value={formData.nombre}
-                                    onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
-                                    required
-                                />
-                                <Input
-                                    label="Descripción"
-                                    placeholder="Ej: Práctica diaria de meditación"
-                                    type="textarea"
-                                    value={formData.descripcion}
-                                    onChange={(e) => setFormData({ ...formData, descripcion: e.target.value })}
-                                />
-                                <div className="flex gap-3 justify-end">
-                                    <Button
-                                        variant="secondary"
-                                        onClick={() => {
-                                            setShowCreateForm(false);
-                                            setFormData({ nombre: '', descripcion: '' });
-                                        }}
-                                    >
-                                        Cancelar
-                                    </Button>
-                                    <Button
-                                        variant="success"
-                                        type="submit"
-                                        isLoading={isSubmitting}
-                                    >
-                                        Crear Hábito
-                                    </Button>
-                                </div>
-                            </form>
-                        </Card>
+                        <HabitForm
+                            mode="create"
+                            initialData={{ nombre: '', descripcion_breve: '', descripcion_larga: '' }}
+                            onSubmit={crearHabitoPersonalizado}
+                            onCancel={() => setShowCreateForm(false)}
+                            isSubmitting={isSubmitting}
+                            title="Crear Hábito Personalizado"
+                        />
                     )}
                 </div>
 
-                 {editando && (
-                <Card className="max-w-2xl mx-auto mb-6">
-                    <h3 className="text-xl font-bold mb-4">Editar Hábito</h3>
-                    <form onSubmit={editarHabito} className="space-y-4">
-                    <Input
-                        label="Nombre"
-                        value={editando.nombre}
-                        onChange={(e) => setEditando({...editando, nombre: e.target.value})}
-                        required
-                    />
-                    <Input
-                        label="Descripción"
-                        type="textarea"
-                        value={editando.descripcion}
-                        onChange={(e) => setEditando({...editando, descripcion: e.target.value})}
-                    />
-                    <div className="flex gap-3 justify-end">
-                        <Button variant="secondary" onClick={() => setEditando(null)}>
-                        Cancelar
-                        </Button>
-                        <Button variant="success" type="submit">
-                        Guardar Cambios
-                        </Button>
+                {/* Editar hábito */}
+                {editando && (
+                    <div className="mb-12">
+                        <HabitForm
+                            mode="edit"
+                            initialData={{
+                                nombre: editando.nombre,
+                                descripcion_breve: editando.descripcion_breve || editando.descripcion,
+                                descripcion_larga: editando.descripcion_larga || ''
+                            }}
+                            onSubmit={editarHabito}
+                            onCancel={() => setEditando(null)}
+                            isSubmitting={isSubmitting}
+                            title="Editar Hábito"
+                        />
                     </div>
-                    </form>
-                </Card>
-)}
+                )}
 
-                {/* Lista de hábitos del usuario */}
-                <div className="bg-white rounded-2xl shadow-xl p-8">
-                    <h2 className="text-2xl font-semibold text-gray-800 mb-6">
-                        Mi Lista de Hábitos ({listaHabitos.length})
+                {/* Mi Lista de Hábitos */}
+                <div>
+                    <h2 className="text-2xl font-semibold text-gray-800 mb-6 text-center">
+                        Mi Lista de Hábitos
                     </h2>
-
                     {listaHabitos.length === 0 ? (
-                        <div className="text-center py-12">
-                            <p className="text-gray-400 text-lg">
-                                Tu lista está vacía. Agrega hábitos desde arriba para comenzar.
-                            </p>
-                        </div>
+                        <Card className="text-center">
+                            <p className="text-gray-600">Aún no has agregado hábitos. ¡Comienza ahora!</p>
+                        </Card>
                     ) : (
-                        <div className="space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {listaHabitos.map((habito) => (
-                                <div
-                                    key={habito.id}
-                                    className={`p-5 rounded-lg border-2 transition-all ${habito.estado === 'hecho'
-                                        ? 'bg-green-50 border-green-300'
-                                        : 'bg-gray-50 border-gray-300'
-                                        }`}
-                                >
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex-1">
-                                            <h3
-                                                className={`text-lg font-semibold ${habito.estado === 'hecho' ? 'line-through text-gray-500' : 'text-gray-800'
-                                                    }`}
-                                            >
+                                <Card key={habito.id} className="flex flex-col">
+                                    <div className="flex-1">
+                                        {/* Estado del hábito - NUEVO */}
+                                        <div className="flex justify-between items-start mb-2">
+                                            <h3 className="text-lg font-semibold text-gray-800">
                                                 {habito.nombre}
                                             </h3>
-                                            <p className="text-sm text-gray-600 mt-1">
-                                                {habito.descripcion}
-                                            </p>
-                                        </div>
-
-                                        <div className="flex items-center gap-3">
-                                            <Button
-                                                size="sm"
-                                                variant={habito.estado === 'hecho' ? 'secondary' : 'success'}
-                                                onClick={() =>
-                                                    cambiarEstado(
-                                                        habito.id,
-                                                        habito.estado === 'por hacer' ? 'hecho' : 'por hacer'
-                                                    )
-                                                }
-                                            >
-                                                {habito.estado === 'hecho' ? 'Desmarcar' : 'Completar'}
-                                            </Button>
-
-                                            <Button
-                                                size="sm"
-                                                variant="danger"
-                                                onClick={() => eliminarHabito(habito.id)}
-                                            >
-                                                Eliminar
-                                            </Button>
-
-                                            <Button
-                                                size="sm"
-                                                variant="ghost"
-                                                onClick={() => setEditando({
-                                                    id: habito.id,
-                                                    nombre: habito.nombre,
-                                                    descripcion: habito.descripcion
-                                                })}
-                                                >
-                                                Editar
-                                            </Button>
-
-                                            <span
-                                                className={`px-4 py-2 rounded-full text-sm font-medium ${habito.estado === 'hecho'
-                                                    ? 'bg-green-100 text-green-800'
-                                                    : 'bg-orange-100 text-orange-800'
-                                                    }`}
-                                            >
-                                                {habito.estado === 'hecho' ? '✓ Hecho' : '○ Por hacer'}
+                                            <span className={`px-2 py-1 rounded text-xs font-medium ${habito.estado === 'completado'
+                                                ? 'bg-green-100 text-green-800 border border-green-200'
+                                                : 'bg-yellow-100 text-yellow-800 border border-yellow-200'}`}>
+                                                {habito.estado === 'completado' ? '✓ Completado' : '⏳ Pendiente'}
                                             </span>
                                         </div>
+
+                                        {/* Descripción breve - NUEVO */}
+                                        <p className="text-gray-600 text-sm mb-2">
+                                            {habito.descripcion_breve || habito.descripcion}
+                                        </p>
+
+                                        {/* Descripción larga (si existe) - NUEVO */}
+                                        {habito.descripcion_larga && (
+                                            <p className="text-gray-500 text-xs italic mb-3">
+                                                {habito.descripcion_larga}
+                                            </p>
+                                        )}
+
+                                        {/* Racha */}
+                                        {habito.racha_actual > 0 && (
+                                            <div className="mb-4 p-2 bg-emerald-50 rounded-lg">
+                                                <p className="text-sm text-emerald-700">
+                                                    🔥 Racha: {habito.racha_actual} días
+                                                </p>
+                                            </div>
+                                        )}
                                     </div>
-                                </div>
+
+                                    {/* Botones - MODIFICADO */}
+                                    <div className="flex gap-2 pt-4 border-t">
+                                        <Button
+                                            variant={habito.estado === 'completado' ? 'secondary' : 'success'}
+                                            size="sm"
+                                            onClick={() => marcarCompletado(habito.id)}
+                                            className="flex-1"
+                                        >
+                                            {habito.estado === 'completado' ? '↶ Pendiente' : '✓ Completar'}
+                                        </Button>
+                                        <Button
+                                            variant="secondary"
+                                            size="sm"
+                                            onClick={() => setEditando(habito)}
+                                            className="flex-1"
+                                        >
+                                            Editar
+                                        </Button>
+                                        <Button
+                                            variant="danger"
+                                            size="sm"
+                                            onClick={() => eliminarHabito(habito.id)}
+                                            className="flex-1"
+                                        >
+                                            Eliminar
+                                        </Button>
+                                    </div>
+                                </Card>
                             ))}
                         </div>
                     )}

@@ -1,6 +1,5 @@
-// frontend/src/pages/Profile.jsx
 import React, { useState, useEffect } from 'react';
-import { Card, Button, Input } from '../components/common';
+import { Card, Button, Input, LoadingScreen } from '../components/common';
 import AuthService from '../services/authService';
 
 export default function Profile() {
@@ -42,7 +41,7 @@ export default function Profile() {
 
     const loadUserStats = async () => {
         // TODO: Conectar con backend para obtener estadísticas reales
-        // Por ahora, datos mock
+        // Cuando el backend tenga los endpoints de estadísticas, reemplazar esto
         setStats({
             totalHabits: 8,
             completedToday: 5,
@@ -71,7 +70,6 @@ export default function Profile() {
             setMessage({ type: 'success', text: 'Perfil actualizado correctamente' });
             setEditMode(false);
             
-            // Recargar datos
             setTimeout(() => {
                 setMessage({ type: '', text: '' });
                 loadUserData();
@@ -84,24 +82,16 @@ export default function Profile() {
 
     const handleCancelEdit = () => {
         setEditMode(false);
-        loadUserData(); // Restaurar datos originales
+        loadUserData();
         setMessage({ type: '', text: '' });
     };
 
     const handleChangePassword = () => {
-        // TODO: Implementar cambio de contraseña
         setMessage({ type: 'info', text: 'Función de cambio de contraseña en desarrollo' });
     };
 
     if (loading) {
-        return (
-            <div className="min-h-screen flex items-center justify-center">
-                <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto"></div>
-                    <p className="mt-4 text-gray-600">Cargando perfil...</p>
-                </div>
-            </div>
-        );
+        return <LoadingScreen message="Cargando perfil..." variant="inline" />;
     }
 
     if (!user) {
@@ -118,6 +108,13 @@ export default function Profile() {
         );
     }
 
+    const statItems = [
+        { label: 'Hábitos Totales', value: stats.totalHabits, color: 'emerald' },
+        { label: 'Completados Hoy', value: stats.completedToday, color: 'blue' },
+        { label: 'Racha Actual', value: `${stats.streak} días`, color: 'purple' },
+        { label: 'Tasa de Éxito', value: `${stats.completionRate}%`, color: 'amber' }
+    ];
+
     return (
         <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 py-8 px-4">
             <div className="max-w-6xl mx-auto">
@@ -129,7 +126,11 @@ export default function Profile() {
 
                 {/* Mensajes */}
                 {message.text && (
-                    <div className={`mb-6 p-4 rounded-lg ${message.type === 'success' ? 'bg-green-100 text-green-800' : message.type === 'error' ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800'}`}>
+                    <div className={`mb-6 p-4 rounded-lg ${
+                        message.type === 'success' ? 'bg-green-100 text-green-800' : 
+                        message.type === 'error' ? 'bg-red-100 text-red-800' : 
+                        'bg-blue-100 text-blue-800'
+                    }`}>
                         {message.text}
                     </div>
                 )}
@@ -137,6 +138,7 @@ export default function Profile() {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     {/* Columna izquierda: Información personal */}
                     <div className="lg:col-span-2 space-y-8">
+                        {/* Información Personal */}
                         <Card>
                             <div className="flex justify-between items-center mb-6">
                                 <h2 className="text-xl font-semibold text-gray-800">Información Personal</h2>
@@ -150,7 +152,7 @@ export default function Profile() {
                                 ) : (
                                     <div className="flex gap-2">
                                         <Button 
-                                            variant="danger" 
+                                            variant="secondary" 
                                             onClick={handleCancelEdit}
                                         >
                                             Cancelar
@@ -211,7 +213,7 @@ export default function Profile() {
                                             <p className="text-sm text-gray-500">Última actualización: Hace 30 días</p>
                                         </div>
                                         <Button 
-                                            variant="outline" 
+                                            variant="ghost" 
                                             onClick={handleChangePassword}
                                         >
                                             Cambiar Contraseña
@@ -225,29 +227,26 @@ export default function Profile() {
                         <Card>
                             <h2 className="text-xl font-semibold text-gray-800 mb-6">Mi Progreso</h2>
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                <div className="bg-emerald-50 p-4 rounded-lg text-center">
-                                    <div className="text-3xl font-bold text-emerald-700">{stats.totalHabits}</div>
-                                    <div className="text-sm text-gray-600 mt-1">Hábitos Totales</div>
-                                </div>
-                                <div className="bg-blue-50 p-4 rounded-lg text-center">
-                                    <div className="text-3xl font-bold text-blue-700">{stats.completedToday}</div>
-                                    <div className="text-sm text-gray-600 mt-1">Completados Hoy</div>
-                                </div>
-                                <div className="bg-purple-50 p-4 rounded-lg text-center">
-                                    <div className="text-3xl font-bold text-purple-700">{stats.streak} días</div>
-                                    <div className="text-sm text-gray-600 mt-1">Racha Actual</div>
-                                </div>
-                                <div className="bg-amber-50 p-4 rounded-lg text-center">
-                                    <div className="text-3xl font-bold text-amber-700">{stats.completionRate}%</div>
-                                    <div className="text-sm text-gray-600 mt-1">Tasa de Éxito</div>
-                                </div>
+                                {statItems.map((item) => {
+                                    const colorMap = {
+                                        emerald: 'bg-emerald-50 text-emerald-700',
+                                        blue: 'bg-blue-50 text-blue-700',
+                                        purple: 'bg-purple-50 text-purple-700',
+                                        amber: 'bg-amber-50 text-amber-700'
+                                    };
+                                    return (
+                                        <div key={item.label} className={`${colorMap[item.color]} p-4 rounded-lg text-center`}>
+                                            <div className="text-3xl font-bold">{item.value}</div>
+                                            <div className="text-sm text-gray-600 mt-1">{item.label}</div>
+                                        </div>
+                                    );
+                                })}
                             </div>
                         </Card>
                     </div>
 
-                    {/* Columna derecha: Tarjeta de usuario y acciones */}
+                    {/* Columna derecha: Tarjeta de usuario */}
                     <div className="space-y-8">
-                        {/* Tarjeta de usuario */}
                         <Card className="text-center">
                             <div className="flex justify-center mb-4">
                                 <div className="w-24 h-24 bg-gradient-to-br from-emerald-400 to-cyan-400 rounded-full flex items-center justify-center text-white text-4xl font-bold">
@@ -255,68 +254,34 @@ export default function Profile() {
                                 </div>
                             </div>
                             <h3 className="text-xl font-bold text-gray-800">{user.username}</h3>
-                            <p className="text-gray-600 mt-1">{user.email}</p>
-                            <p className="text-gray-500 text-sm mt-2">
-                                Miembro desde: {new Date(user.created_at || Date.now()).toLocaleDateString('es-ES')}
-                            </p>
-                            <div className="mt-6 pt-6 border-t">
-                                <p className="text-gray-700 text-sm">ID de usuario: <span className="font-mono text-xs">{user.id}</span></p>
+                            <p className="text-gray-600 text-sm mt-1">{user.email}</p>
+                            
+                            <div className="mt-6 pt-6 border-t space-y-3">
+                                <div className="text-sm text-gray-600">
+                                    <p className="font-medium">Miembro desde</p>
+                                    <p className="text-xs">Enero 2024</p>
+                                </div>
+                                <div className="text-sm text-gray-600">
+                                    <p className="font-medium">Estado</p>
+                                    <p className="text-xs text-green-600 font-semibold">Activo</p>
+                                </div>
                             </div>
                         </Card>
 
                         {/* Acciones rápidas */}
                         <Card>
                             <h3 className="text-lg font-semibold text-gray-800 mb-4">Acciones Rápidas</h3>
-                            <div className="space-y-3">
-                                <Button 
-                                    variant="outline" 
-                                    className="w-full justify-start"
-                                    onClick={() => window.location.href = '/export-data'}
-                                >
-                                    <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                    </svg>
-                                    Exportar mis datos
+                            <div className="space-y-2">
+                                <Button variant="ghost" className="w-full justify-start" onClick={() => window.location.href = '/estadisticas'}>
+                                    📊 Ver Estadísticas
                                 </Button>
-                                <Button 
-                                    variant="outline" 
-                                    className="w-full justify-start"
-                                    onClick={() => window.location.href = '/notifications'}
-                                >
-                                    <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                                    </svg>
-                                    Notificaciones
+                                <Button variant="ghost" className="w-full justify-start" onClick={() => window.location.href = '/'}>
+                                    🎯 Mis Hábitos
                                 </Button>
-                                <Button 
-                                    variant="outline" 
-                                    className="w-full justify-start text-red-600 hover:text-red-700 hover:border-red-300"
-                                    onClick={() => {
-                                        if (window.confirm('¿Estás seguro de que deseas eliminar tu cuenta? Esta acción no se puede deshacer.')) {
-                                            // TODO: Implementar eliminación de cuenta
-                                            alert('Función de eliminación de cuenta en desarrollo');
-                                        }
-                                    }}
-                                >
-                                    <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                    </svg>
-                                    Eliminar cuenta
+                                <Button variant="ghost" className="w-full justify-start text-red-600 hover:bg-red-50">
+                                    🗑️ Eliminar Cuenta
                                 </Button>
                             </div>
-                        </Card>
-
-                        {/* Meta del mes */}
-                        <Card>
-                            <h3 className="text-lg font-semibold text-gray-800 mb-4">Meta del Mes</h3>
-                            <div className="mb-2 flex justify-between text-sm">
-                                <span className="text-gray-600">Progreso</span>
-                                <span className="font-medium text-emerald-600">65%</span>
-                            </div>
-                            <div className="w-full bg-gray-200 rounded-full h-2">
-                                <div className="bg-emerald-600 h-2 rounded-full" style={{ width: '65%' }}></div>
-                            </div>
-                            <p className="text-sm text-gray-500 mt-3">Mantén tu racha de 14 días para alcanzar la meta mensual</p>
                         </Card>
                     </div>
                 </div>

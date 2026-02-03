@@ -1,7 +1,5 @@
-// frontend/src/pages/Statistics.jsx
 import React, { useState, useEffect } from 'react';
-import { Card, Button } from '../components/common';
-import StatsCard from '../components/common/StatsCard';
+import { Card, Button, StatsCard, LoadingScreen } from '../components/common';
 import HabitService from '../services/habitService';
 
 export default function Statistics() {
@@ -26,8 +24,7 @@ export default function Statistics() {
         loading: true
     });
 
-    const [timeRange, setTimeRange] = useState('week'); // week, month, year, all
-    const [selectedCategory, setSelectedCategory] = useState('all');
+    const [timeRange, setTimeRange] = useState('week');
 
     useEffect(() => {
         loadStatistics();
@@ -36,7 +33,7 @@ export default function Statistics() {
     const loadStatistics = async () => {
         try {
             // TODO: Conectar con backend para obtener estadísticas reales
-            // Por ahora, datos mock
+            // Cuando el backend tenga los endpoints de estadísticas, reemplazar esto
             const mockStats = {
                 overall: {
                     totalHabits: 12,
@@ -89,15 +86,10 @@ export default function Statistics() {
         return days[dayKey] || dayKey;
     };
 
+    const colors = ['#10B981', '#3B82F6', '#8B5CF6', '#F59E0B', '#EF4444', '#06B6D4'];
+
     if (stats.loading) {
-        return (
-            <div className="min-h-screen flex items-center justify-center">
-                <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto"></div>
-                    <p className="mt-4 text-gray-600">Cargando estadísticas...</p>
-                </div>
-            </div>
-        );
+        return <LoadingScreen message="Cargando estadísticas..." variant="inline" />;
     }
 
     return (
@@ -115,7 +107,7 @@ export default function Statistics() {
                         {timeRangeButtons.map((button) => (
                             <Button
                                 key={button.id}
-                                variant={timeRange === button.id ? 'primary' : 'outline'}
+                                variant={timeRange === button.id ? 'primary' : 'ghost'}
                                 size="sm"
                                 onClick={() => setTimeRange(button.id)}
                             >
@@ -190,11 +182,11 @@ export default function Statistics() {
                                 <div className="text-xs text-gray-500 mb-2">{getDayName(day).slice(0, 3)}</div>
                                 <div className="relative w-full flex justify-center">
                                     <div 
-                                        className="w-3/4 bg-gradient-to-t from-emerald-400 to-emerald-300 rounded-t-lg transition-all hover:opacity-80"
+                                        className="w-3/4 bg-gradient-to-t from-emerald-400 to-emerald-300 rounded-t-lg transition-all hover:opacity-80 cursor-pointer"
                                         style={{ height: `${percentage}%` }}
                                         title={`${percentage}% completado`}
                                     >
-                                        <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 hover:opacity-100 transition-opacity">
                                             {percentage}%
                                         </div>
                                     </div>
@@ -216,32 +208,21 @@ export default function Statistics() {
                                         <div className="flex items-center">
                                             <div 
                                                 className="w-3 h-3 rounded-full mr-3"
-                                                style={{
-                                                    backgroundColor: [
-                                                        '#10B981', // emerald
-                                                        '#3B82F6', // blue
-                                                        '#8B5CF6', // purple
-                                                        '#F59E0B', // amber
-                                                        '#EF4444', // red
-                                                        '#06B6D4'  // cyan
-                                                    ][index % 6]
-                                                }}
+                                                style={{ backgroundColor: colors[index % colors.length] }}
                                             ></div>
                                             <span className="font-medium">{category.name}</span>
                                         </div>
                                         <div className="text-right">
                                             <span className="font-bold">{category.count} hábitos</span>
-                                            <span className="text-gray-600 ml-2">({category.completion}% completados)</span>
+                                            <span className="text-gray-600 ml-2">({category.completion}%)</span>
                                         </div>
                                     </div>
                                     <div className="w-full bg-gray-200 rounded-full h-2">
                                         <div 
-                                            className="h-2 rounded-full"
+                                            className="h-2 rounded-full transition-all"
                                             style={{
                                                 width: `${category.completion}%`,
-                                                backgroundColor: [
-                                                    '#10B981', '#3B82F6', '#8B5CF6', '#F59E0B', '#EF4444', '#06B6D4'
-                                                ][index % 6]
+                                                backgroundColor: colors[index % colors.length]
                                             }}
                                         ></div>
                                     </div>
@@ -250,92 +231,28 @@ export default function Statistics() {
                         </div>
                     </Card>
 
+                    {/* Información adicional */}
                     <Card>
-                        <h2 className="text-xl font-semibold text-gray-800 mb-6">Insights y Recomendaciones</h2>
+                        <h2 className="text-xl font-semibold text-gray-800 mb-6">Consejos de Mejora</h2>
                         <div className="space-y-4">
                             <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-                                <div className="flex items-start">
-                                    <svg className="w-5 h-5 text-blue-600 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    <div>
-                                        <h4 className="font-medium text-blue-800">Mejor día: Jueves</h4>
-                                        <p className="text-blue-700 text-sm mt-1">Tienes un 95% de completitud los jueves. ¡Sigue así!</p>
-                                    </div>
-                                </div>
+                                <p className="text-sm text-blue-800">
+                                    <strong>💡 Consejo:</strong> Mantén una racha consistente. Incluso un pequeño progreso diario es mejor que nada.
+                                </p>
                             </div>
-                            
-                            <div className="p-4 bg-amber-50 rounded-lg border border-amber-200">
-                                <div className="flex items-start">
-                                    <svg className="w-5 h-5 text-amber-600 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.998-.833-2.73 0L4.346 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                                    </svg>
-                                    <div>
-                                        <h4 className="font-medium text-amber-800">Día débil: Sábado</h4>
-                                        <p className="text-amber-700 text-sm mt-1">Solo completas el 45% de hábitos los sábados. Considera ajustar tu rutina.</p>
-                                    </div>
-                                </div>
+                            <div className="p-4 bg-green-50 rounded-lg border border-green-200">
+                                <p className="text-sm text-green-800">
+                                    <strong>🎯 Meta:</strong> Intenta alcanzar un 80% de completitud en tus hábitos esta semana.
+                                </p>
                             </div>
-                            
-                            <div className="p-4 bg-emerald-50 rounded-lg border border-emerald-200">
-                                <div className="flex items-start">
-                                    <svg className="w-5 h-5 text-emerald-600 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    <div>
-                                        <h4 className="font-medium text-emerald-800">Racha en peligro</h4>
-                                        <p className="text-emerald-700 text-sm mt-1">Llevas 14 días consecutivos. ¡Solo 1 día más para tu récord personal!</p>
-                                    </div>
-                                </div>
-                            </div>
-                            
                             <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
-                                <div className="flex items-start">
-                                    <svg className="w-5 h-5 text-purple-600 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                                    </svg>
-                                    <div>
-                                        <h4 className="font-medium text-purple-800">Meta alcanzable</h4>
-                                        <p className="text-purple-700 text-sm mt-1">Si mantienes el ritmo actual, alcanzarás tu meta mensual en 7 días.</p>
-                                    </div>
-                                </div>
+                                <p className="text-sm text-purple-800">
+                                    <strong>📈 Progreso:</strong> Has mejorado un 5% comparado con la semana anterior. ¡Sigue así!
+                                </p>
                             </div>
-                        </div>
-                        
-                        <div className="mt-6 pt-6 border-t">
-                            <Button variant="primary" className="w-full">
-                                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                                </svg>
-                                Ver Reporte Detallado
-                            </Button>
                         </div>
                     </Card>
                 </div>
-
-                {/* Exportar datos */}
-                <Card className="mt-8">
-                    <div className="flex flex-col md:flex-row md:items-center justify-between">
-                        <div>
-                            <h3 className="text-lg font-semibold text-gray-800">¿Quieres analizar más a fondo?</h3>
-                            <p className="text-gray-600 mt-1">Exporta tus datos para analizarlos en Excel o herramientas de BI.</p>
-                        </div>
-                        <div className="flex gap-3 mt-4 md:mt-0">
-                            <Button variant="outline">
-                                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                </svg>
-                                Exportar CSV
-                            </Button>
-                            <Button variant="primary">
-                                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                </svg>
-                                Generar Reporte PDF
-                            </Button>
-                        </div>
-                    </div>
-                </Card>
             </div>
         </div>
     );
