@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Button, Input, Card } from '../common';
+import { Card, Button, Input } from '../../components/common'; 
 import { Link, useNavigate } from 'react-router-dom';
 import AuthService from '../../services/authService';
 
