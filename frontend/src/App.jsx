@@ -1,6 +1,9 @@
+// frontend/src/App.jsx - VERSIÓN ACTUALIZADA
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Home from './pages/Home';
+import Profile from './pages/Profile';
+import Statistics from './pages/Statistics';
 import Register from './components/auth/Register';
 import Login from './components/auth/Login';
 import Navbar from './components/common/Navbar';
@@ -42,6 +45,28 @@ export default function App() {
                         <PrivateRoute>
                             <MainLayout>
                                 <Home />
+                            </MainLayout>
+                        </PrivateRoute>
+                    } 
+                />
+                
+                <Route 
+                    path="/perfil" 
+                    element={
+                        <PrivateRoute>
+                            <MainLayout>
+                                <Profile />
+                            </MainLayout>
+                        </PrivateRoute>
+                    } 
+                />
+                
+                <Route 
+                    path="/estadisticas" 
+                    element={
+                        <PrivateRoute>
+                            <MainLayout>
+                                <Statistics />
                             </MainLayout>
                         </PrivateRoute>
                     } 

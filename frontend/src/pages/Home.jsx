@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Input, Card } from '../components/common';
+import { Card, Button, Input } from '../components/common';
 import HabitService from '../services/habitService';
 
 export default function Home() {

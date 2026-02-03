@@ -78,3 +78,4 @@ INSERT INTO habitos (nombre, descripcion_breve, descripcion_larga, categoria_id)
 ('Practicar gratitud', 'Escribe 3 cosas por las que agradeces.', 'La gratitud nos aleja de la cultura del "necesito más". Valorar lo esencial es el primer paso hacia un estilo de vida minimalista y sostenible.', 4),
 ('Digital Detox', 'Borra correos basura y archivos viejos.', 'El almacenamiento en la nube gasta mucha energía en servidores. Borrar "basura digital" ayuda a reducir la huella de carbono de los centros de datos.', 4),
 ('Baño de 5 minutos', 'Higiene personal optimizando el agua.', 'Una ducha corta ahorra hasta 40 litros de agua. También reduces el consumo de gas o electricidad necesarios para calentar el agua.', 1);
+
