@@ -47,6 +47,22 @@ router.patch('/lista-habitos/:id', async (req, res) => {
     }
 });
 
+// Cambiar estado de hábito (completado/pendiente)
+router.post('/lista-habitos/:id/toggle-status', async (req, res) => {
+    try {
+        const { estado } = req.body;
+        if (!estado || !['pendiente', 'completado'].includes(estado)) {
+            return res.status(400).json({ error: "Estado inválido. Use 'pendiente' o 'completado'" });
+        }
+
+        const result = await HabitService.toggleHabitStatus(req.params.id, estado);
+        res.json(result);
+    } catch (error) {
+        res.status(error.status || 500).json({ error: error.message });
+    }
+});
+
+
 // Eliminar hábito
 router.delete('/lista-habitos/:id', async (req, res) => {
     try {

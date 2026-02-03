@@ -29,21 +29,40 @@ class HabitRepository {
         try {
             const suscripciones = await UsuarioHabito.findAll({
                 where: { usuario_id: 1 },
-                include: [{
-                    model: Habito,
-                    as: 'detalle_habito'
-                }]
+                include: [
+                    {
+                        model: Habito,
+                        as: 'detalle_habito'
+                    },
+                    {
+                        model: Seguimiento,
+                        as: 'registros',
+                        required: false,
+                        where: {
+                            fecha: new Date().toISOString().split('T')[0] // Solo hoy
+                        }
+                    }
+                ]
             });
 
-            // Mapear para mantener compatibilidad con el frontend anterior
-            return suscripciones.map(s => ({
-                id: s.id,
-                habito_id: s.habito_id,
-                nombre: s.detalle_habito.nombre,
-                descripcion: s.detalle_habito.descripcion_breve,
-                estado: 'por hacer', // Esto debería venir de la tabla Seguimiento en una versión más avanzada
-                racha_actual: s.racha_actual
-            }));
+            return suscripciones.map(s => {
+                // Determinar estado de hoy
+                const seguimientoHoy = s.registros && s.registros.length > 0
+                    ? s.registros[0]
+                    : null;
+
+                const estadoHoy = seguimientoHoy ? seguimientoHoy.estado : 'pendiente';
+
+                return {
+                    id: s.id,
+                    habito_id: s.habito_id,
+                    nombre: s.detalle_habito.nombre,
+                    descripcion_breve: s.detalle_habito.descripcion_breve,
+                    descripcion_larga: s.detalle_habito.descripcion_larga,
+                    estado: estadoHoy, // Estado de HOY
+                    racha_actual: s.racha_actual
+                };
+            });
         } catch (error) {
             console.error('Error en findUserHabits:', error);
             throw error;
