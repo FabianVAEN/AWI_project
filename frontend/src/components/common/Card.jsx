@@ -19,7 +19,7 @@ export default function Card({
   ...props
 }) {
   const variantStyles = {
-    default: 'bg-black border-gray-300',
+    default: 'bg-white border-gray-300',
     success: 'bg-green-50 border-green-300',
     error: 'bg-red-50 border-red-300',
     warning: 'bg-yellow-50 border-yellow-300'

@@ -199,7 +199,7 @@ export default function Home() {
                             <p className="text-gray-600">No hay hábitos disponibles en el catálogo</p>
                         </Card>
                     ) : (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 px-2">
+                        <div className="grid grid-flow-col auto-cols-[18rem] gap-4 px-2 pb-2 overflow-x-auto">
                             {habitosFiltrados.map((habito) => {
                                     const yaAgregado = habitosYaAgregados.includes(habito.id);
                                     const descripcionBreve = habito.descripcion_breve || habito.descripcion;
