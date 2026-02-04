@@ -1,4 +1,4 @@
-const { Habito, UsuarioHabito, Seguimiento } = require('./models');
+const { Habito, UsuarioHabito, Seguimiento, Categoria } = require('./models');
 
 class HabitRepository {
     // Obtener catálogo de hábitos predeterminados
@@ -94,10 +94,19 @@ class HabitRepository {
         try {
             // Si es un hábito personalizado (no viene del catálogo)
             if (!habitData.habito_id) {
+                const categoriaPersonalizada = await Categoria.findOne({
+                    where: { nombre: 'Personalizado' }
+                });
+
+                if (!categoriaPersonalizada) {
+                    throw new Error("Categoría 'Personalizado' no encontrada");
+                }
+
                 const nuevoHabito = await Habito.create({
                     nombre: habitData.nombre,
                     descripcion_breve: habitData.descripcion,
                     es_predeterminado: false,
+                    categoria_id: categoriaPersonalizada.id,
                     usuario_id: 1
                 });
                 habitData.habito_id = nuevoHabito.id;
