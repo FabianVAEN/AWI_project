@@ -31,7 +31,11 @@ const Usuario = sequelize.define('Usuario', {
   password: {
     type: DataTypes.STRING,
     allowNull: false
-  }
+  },
+  es_admin: { 
+    type: DataTypes.BOOLEAN,
+    defaultValue: false
+}
 }, { 
   tableName: 'usuarios',
   timestamps: true,
