@@ -319,76 +319,7 @@ Este es un proyecto académico, pero las sugerencias son bienvenidas:
 
 **Última actualización**: 26 de enero de 2026
 
-```
-awi-project
-├─ backend
-│  ├─ config
-│  │  ├─ constants.js
-│  │  └─ database.js
-│  ├─ controllers
-│  │  ├─ adminController.js
-│  │  └─ usuarioController.js
-│  ├─ docker-compose.yml
-│  ├─ init.sql
-│  ├─ middleware
-│  │  └─ auth.js
-│  ├─ package-lock.json
-│  ├─ package.json
-│  ├─ repositories
-│  │  ├─ habitRepository.js
-│  │  └─ models
-│  │     ├─ Categoria.js
-│  │     ├─ Habito.js
-│  │     ├─ index.js
-│  │     ├─ Seguimiento.js
-│  │     ├─ Usuario.js
-│  │     └─ UsuarioHabito.js
-│  ├─ routes
-│  │  ├─ habitRoutes.js
-│  │  └─ usuarioRoutes.js
-│  ├─ server.js
-│  └─ services
-│     └─ habitService.js
-├─ frontend
-│  ├─ eslint.config.js
-│  ├─ index.html
-│  ├─ package-lock.json
-│  ├─ package.json
-│  ├─ postcss.config.js
-│  ├─ public
-│  │  └─ vite.svg
-│  ├─ README.md
-│  ├─ src
-│  │  ├─ App.css
-│  │  ├─ App.jsx
-│  │  ├─ assets
-│  │  │  └─ react.svg
-│  │  ├─ components
-│  │  │  ├─ auth
-│  │  │  │  ├─ Login.jsx
-│  │  │  │  └─ Register.jsx
-│  │  │  └─ common
-│  │  │     ├─ Button.jsx
-│  │  │     ├─ Card.jsx
-│  │  │     ├─ HabitForm.jsx
-│  │  │     ├─ index.js
-│  │  │     ├─ Input.jsx
-│  │  │     ├─ LoadingScreen.jsx
-│  │  │     ├─ Navbar.jsx
-│  │  │     └─ StatsCard.jsx
-│  │  ├─ index.css
-│  │  ├─ main.jsx
-│  │  ├─ pages
-│  │  │  ├─ Home.jsx
-│  │  │  ├─ Profile.jsx
-│  │  │  └─ Statistics.jsx
-│  │  └─ services
-│  │     ├─ adminService.js
-│  │     ├─ authService.js
-│  │     └─ habitService.js
-│  └─ vite.config.js
-├─ Readme.md
-└─ Readme_AWI.md
+
 
 ```
 ```

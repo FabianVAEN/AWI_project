@@ -98,6 +98,14 @@ export default function Navbar() {
                                     >
                                         Perfil
                                     </Link>
+                                    {user?.es_admin && (
+                                        <Link 
+                                            to="/admin" 
+                                            className="text-white hover:text-emerald-100 px-3 py-2 rounded-md text-sm font-medium transition hover:bg-white/10 bg-white/20"
+                                        >
+                                            Admin
+                                        </Link>
+                                    )}
                                 </div>
                                 
                                 {/* Dropdown para móvil/avatar */}

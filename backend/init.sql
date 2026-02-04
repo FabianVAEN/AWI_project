@@ -1,3 +1,5 @@
+
+init.sql
 -- 1. Crear extensiones o tipos necesarios
 DO $$ 
 BEGIN
@@ -83,6 +85,6 @@ INSERT INTO habitos (nombre, descripcion_breve, descripcion_larga, categoria_id)
 
 INSERT INTO usuarios (username, primer_nombre, segundo_nombre, email, password, es_admin) 
 VALUES (
-    'admin_awi', 'Admin', 'Principal', 'admin@awi.com', '$2a$10$76S.TIDrIOfTfM.C.Nl6guYp7v5M5Z.3r3M1K.v1J9h7y6z5x4w3v', -- Hash de 'admin123'
+    'admin_awi', 'Admin', 'Principal', 'admin@awi.com', '$2a$10$8uE8.1G2m5H4I3J2K1L0M9N.V6R.G8.yW1f3CnuM6l9m8W/aM.yS', -- Hash de 'admin123'
     TRUE
 );

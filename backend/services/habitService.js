@@ -6,11 +6,11 @@ class HabitService {
         return await HabitRepository.findAllDefaults();
     }
 
-    async getUserHabits() {
-        return await HabitRepository.findUserHabits();
+    async getUserHabits(usuario_id) {
+        return await HabitRepository.findUserHabits(usuario_id);
     }
 
-    async addHabitFromCatalog(habito_id) {
+    async addHabitFromCatalog(habito_id, usuario_id) {
         const numericId = parseInt(habito_id);
         if (isNaN(numericId)) {
             throw { status: 400, message: "El ID del hábito debe ser un número" };
@@ -21,7 +21,7 @@ class HabitService {
             throw { status: 404, message: "Hábito no encontrado en el catálogo" };
         }
 
-        const existing = await HabitRepository.findUserHabitByDefaultId(numericId);
+        const existing = await HabitRepository.findUserHabitByDefaultId(numericId, usuario_id);
         if (existing) {
             throw { status: 400, message: "Este hábito ya está en tu lista" };
         }
@@ -30,10 +30,10 @@ class HabitService {
             habito_id: defaultHabit.id,
             nombre: defaultHabit.nombre,
             descripcion: defaultHabit.descripcion_breve
-        });
+        }, usuario_id);
     }
 
-    async createCustomHabit(habitData) {
+    async createCustomHabit(habitData, usuario_id) {
         const { nombre, descripcion } = habitData;
         if (!nombre) {
             throw { status: 400, message: "El nombre del hábito es obligatorio" };
@@ -43,34 +43,30 @@ class HabitService {
             habito_id: null,
             nombre,
             descripcion: descripcion || ""
-        });
+        }, usuario_id);
     }
 
-    async updateHabit(id, data) {
+    async updateHabit(id, data, usuario_id) {
         const numericId = parseInt(id);
         if (isNaN(numericId)) {
             throw { status: 400, message: "El ID debe ser un número" };
         }
 
-        const existing = await HabitRepository.findUserHabitById(numericId);
+        const existing = await HabitRepository.findUserHabitById(numericId, usuario_id);
         if (!existing) {
             throw { status: 404, message: "Hábito no encontrado en tu lista" };
         }
 
-        if (data.estado && data.estado !== 'por hacer' && data.estado !== 'hecho') {
-            throw { status: 400, message: "Estado inválido. Use 'por hacer' o 'hecho'" };
-        }
-
-        return await HabitRepository.update(numericId, data);
+        return await HabitRepository.update(numericId, data, usuario_id);
     }
 
-    async toggleHabitStatus(id, estado) {
+    async toggleHabitStatus(id, estado, usuario_id) {
         const numericId = parseInt(id);
         if (isNaN(numericId)) {
             throw { status: 400, message: "El ID debe ser un número" };
         }
 
-        const suscripcion = await HabitRepository.findUserHabitById(numericId);
+        const suscripcion = await HabitRepository.findUserHabitById(numericId, usuario_id);
         if (!suscripcion) {
             throw { status: 404, message: "Hábito no encontrado en tu lista" };
         }
@@ -79,7 +75,6 @@ class HabitService {
             throw { status: 400, message: "Estado inválido. Use 'pendiente' o 'completado'" };
         }
 
-        // Crear o actualizar seguimiento para hoy
         const hoy = new Date().toISOString().split('T')[0];
         const [seguimiento, created] = await Seguimiento.findOrCreate({
             where: {
@@ -93,9 +88,7 @@ class HabitService {
             await seguimiento.update({ estado });
         }
 
-        // Recalcular racha si se completó o se desmarcó
         if (estado === 'completado') {
-            // Aumentar racha
             const nuevaRacha = (suscripcion.racha_actual || 0) + 1;
             const rachaMaxima = Math.max(suscripcion.racha_maxima || 0, nuevaRacha);
 
@@ -103,9 +96,10 @@ class HabitService {
                 racha_actual: nuevaRacha,
                 racha_maxima: rachaMaxima
             });
-        } else if (estado === 'pendiente' && seguimiento.estado === 'completado') {
-            // Si antes estaba completado y ahora pendiente, resetear racha
-            await suscripcion.update({ racha_actual: 0 });
+        } else if (estado === 'pendiente') {
+            // Si se desmarca, restamos 1 a la racha (o la reseteamos según lógica de negocio)
+            const nuevaRacha = Math.max(0, (suscripcion.racha_actual || 0) - 1);
+            await suscripcion.update({ racha_actual: nuevaRacha });
         }
 
         return {
@@ -115,13 +109,13 @@ class HabitService {
         };
     }
 
-    async deleteHabit(id) {
+    async deleteHabit(id, usuario_id) {
         const numericId = parseInt(id);
         if (isNaN(numericId)) {
             throw { status: 400, message: "El ID debe ser un número" };
         }
 
-        const deleted = await HabitRepository.delete(numericId);
+        const deleted = await HabitRepository.delete(numericId, usuario_id);
         if (!deleted) {
             throw { status: 404, message: "Hábito no encontrado" };
         }
