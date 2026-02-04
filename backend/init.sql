@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS usuarios (
     segundo_nombre VARCHAR(100),
     email VARCHAR(150) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
+    es_admin BOOLEAN DEFAULT FALSE, 
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -60,7 +61,8 @@ INSERT INTO categorias (nombre, descripcion, icono) VALUES
 ('Consumo Consciente', 'Hábitos para reducir residuos y mejorar la nutrición.', 'fa-leaf'),
 ('Energía Vital', 'Descanso y eficiencia energética.', 'fa-bolt'),
 ('Movimiento Verde', 'Actividad física y transporte sostenible.', 'fa-bicycle'),
-('Mente y Entorno', 'Bienestar mental y minimalismo.', 'fa-brain');
+('Mente y Entorno', 'Bienestar mental y minimalismo.', 'fa-brain'),
+('Personalizado', 'Hábitos creados por ti que no encajan en otras categorías.', 'fa-user-gear'); 
 
 INSERT INTO habitos (nombre, descripcion_breve, descripcion_larga, categoria_id) VALUES 
 ('Beber 8 vasos de agua', 'Mantén tu cuerpo hidratado y con energía.', 'Utiliza un termo reutilizable. Evitar botellas de plástico de un solo uso reduce la demanda de petróleo y evita que microplásticos entren en tu organismo y en los océanos.', 1),
@@ -79,3 +81,8 @@ INSERT INTO habitos (nombre, descripcion_breve, descripcion_larga, categoria_id)
 ('Digital Detox', 'Borra correos basura y archivos viejos.', 'El almacenamiento en la nube gasta mucha energía en servidores. Borrar "basura digital" ayuda a reducir la huella de carbono de los centros de datos.', 4),
 ('Baño de 5 minutos', 'Higiene personal optimizando el agua.', 'Una ducha corta ahorra hasta 40 litros de agua. También reduces el consumo de gas o electricidad necesarios para calentar el agua.', 1);
 
+INSERT INTO usuarios (username, primer_nombre, segundo_nombre, email, password, es_admin) 
+VALUES (
+    'admin_awi', 'Admin', 'Principal', 'admin@awi.com', '$2a$10$76S.TIDrIOfTfM.C.Nl6guYp7v5M5Z.3r3M1K.v1J9h7y6z5x4w3v', -- Hash de 'admin123'
+    TRUE
+);
