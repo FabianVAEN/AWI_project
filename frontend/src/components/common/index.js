@@ -5,3 +5,4 @@ export { default as Navbar } from './Navbar';
 export { default as StatsCard } from './StatsCard';
 export { default as LoadingScreen } from './LoadingScreen';
 export { default as HabitForm } from './HabitForm';
+export { default as Modal } from './Modal';

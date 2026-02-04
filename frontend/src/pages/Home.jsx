@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Button, LoadingScreen, HabitForm } from '../components/common';
+import { Card, Button, LoadingScreen, HabitForm, Modal } from '../components/common';
 import HabitService from '../services/habitService';
 
 export default function Home() {
@@ -7,9 +7,10 @@ export default function Home() {
     const [habitos, setHabitos] = useState([]);
     const [listaHabitos, setListaHabitos] = useState([]);
     const [error, setError] = useState('');
-    const [showCreateForm, setShowCreateForm] = useState(false);
+    const [modalCrearAbierto, setModalCrearAbierto] = useState(false); 
+    const [modalEditarAbierto, setModalEditarAbierto] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [editando, setEditando] = useState(null);
+    const [habitoAEditar, setHabitoAEditar] = useState(null);
 
     useEffect(() => {
         // Pantalla de carga por 2 segundos
@@ -52,7 +53,7 @@ export default function Home() {
             setIsSubmitting(true);
             setError('');
             await HabitService.createCustomHabit(formData);
-            setShowCreateForm(false);
+            setModalCrearAbierto(false);
             await cargarDatos();
         } catch (err) {
             setError(err.message);
@@ -64,8 +65,9 @@ export default function Home() {
     const editarHabito = async (formData) => {
         try {
             setError('');
-            await HabitService.updateHabit(editando.id, formData);
-            setEditando(null);
+            await HabitService.updateHabit(habitoAEditar.id, formData);
+            setModalEditarAbierto(false);
+            setHabitoAEditar(null);
             await cargarDatos();
         } catch (err) {
             setError('Error al editar hábito');
@@ -172,45 +174,39 @@ export default function Home() {
                     )}
                 </div>
 
-                {/* Crear hábito personalizado */}
+                {/* Botón destacado para crear hábito personalizado */}
                 <div className="mb-12">
-                    <div className="text-center mb-6">
-                        <Button
-                            variant={showCreateForm ? 'secondary' : 'primary'}
-                            onClick={() => setShowCreateForm(!showCreateForm)}
-                        >
-                            {showCreateForm ? 'Cancelar' : '+ Crear Hábito Personalizado'}
-                        </Button>
+                    <div className="max-w-2xl mx-auto bg-gradient-to-r from-emerald-500 to-teal-500 rounded-2xl p-8 shadow-xl">
+                        <div className="text-center text-white">
+                            <h3 className="text-2xl font-bold mb-3">
+                                ¿No encuentras el hábito perfecto?
+                            </h3>
+                            <p className="mb-6 text-emerald-50">
+                                Crea tu propio hábito personalizado y adáptalo a tus necesidades
+                            </p>
+                            <button
+                                onClick={() => setModalCrearAbierto(true)}
+                                className="bg-white text-emerald-600 font-bold px-8 py-3 rounded-full hover:bg-emerald-50 transform hover:scale-105 transition-all duration-300 shadow-lg inline-flex items-center gap-2"
+                            >
+                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                </svg>
+                                Crear Mi Hábito Personalizado
+                            </button>
+                        </div>
                     </div>
-
-                    {showCreateForm && (
-                        <HabitForm
-                            mode="create"
-                            initialData={{ nombre: '', descripcion_breve: '' }}
-                            onSubmit={crearHabitoPersonalizado}
-                            onCancel={() => setShowCreateForm(false)}
-                            isSubmitting={isSubmitting}
-                            title="Crear Hábito Personalizado"
-                        />
-                    )}
                 </div>
-
-                {/* Editar hábito */}
-                {editando && (
-                    <div className="mb-12">
-                        <HabitForm
-                            mode="edit"
-                            initialData={{
-                                nombre: editando.nombre,
-                                descripcion_breve: editando.descripcion_breve || editando.descripcion
-                            }}
-                            onSubmit={editarHabito}
-                            onCancel={() => setEditando(null)}
-                            isSubmitting={isSubmitting}
-                            title="Editar Hábito"
-                        />
-                    </div>
-                )}
+                
+                {/* Crear hábito personalizado */}
+                <button
+                    onClick={() => setModalCrearAbierto(true)}
+                    className="fixed bottom-8 right-8 bg-gradient-to-r from-emerald-500 to-teal-500 text-white p-4 rounded-full shadow-2xl hover:shadow-emerald-500/50 hover:scale-110 transition-all duration-300 z-40"
+                    title="Crear Hábito Personalizado"
+                >
+                    <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
+                </button>
 
                 {/* Mi Lista de Hábitos */}
                 <div>
@@ -266,7 +262,12 @@ export default function Home() {
                                         <Button
                                             variant="secondary"
                                             size="sm"
-                                            onClick={() => !habito.es_predeterminado && setEditando(habito)}
+                                            onClick={() => {
+                                                if (!habito.es_predeterminado) {
+                                                    setHabitoAEditar(habito);
+                                                    setModalEditarAbierto(true);
+                                                }
+                                            }}
                                             className="flex-1"
                                             disabled={habito.es_predeterminado}
                                         >
@@ -286,6 +287,48 @@ export default function Home() {
                         </div>
                     )}
                 </div>
+                {/* Modal para crear hábito */}
+                <Modal
+                    isOpen={modalCrearAbierto}
+                    onClose={() => setModalCrearAbierto(false)}
+                    title="Crear Hábito Personalizado"
+                >
+                    <HabitForm
+                        mode="create"
+                        initialData={{ nombre: '', descripcion: '' }}
+                        onSubmit={crearHabitoPersonalizado}
+                        onCancel={() => setModalCrearAbierto(false)}
+                        isSubmitting={isSubmitting}
+                        showCategory={true}
+                    />
+                </Modal>
+
+                {/* Modal para editar hábito */}
+                <Modal
+                    isOpen={modalEditarAbierto}
+                    onClose={() => {
+                        setModalEditarAbierto(false);
+                        setHabitoAEditar(null);
+                    }}
+                    title="Editar Hábito"
+                >
+                    {habitoAEditar && (
+                        <HabitForm
+                            mode="edit"
+                            initialData={{
+                                nombre: habitoAEditar.nombre,
+                                descripcion: habitoAEditar.descripcion_breve || habitoAEditar.descripcion
+                            }}
+                            onSubmit={editarHabito}
+                            onCancel={() => {
+                                setModalEditarAbierto(false);
+                                setHabitoAEditar(null);
+                            }}
+                            isSubmitting={isSubmitting}
+                            showCategory={false}
+                        />
+                    )}
+                </Modal>
             </div>
         </div>
     );
