@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button, Input, Card } from './index';
+import { Button, Input, Modal } from './index';
 
 /**
  * Componente HabitForm reutilizable para crear y editar hábitos
@@ -15,6 +15,7 @@ import { Button, Input, Card } from './index';
 export default function HabitForm({
   mode = 'create',
   initialData = { nombre: '', descripcion: '' },
+  showCategory = true,
   onSubmit,
   onCancel,
   isSubmitting = false,
@@ -34,7 +35,7 @@ export default function HabitForm({
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    
+
     // Validación básica
     if (!formData.nombre.trim()) {
       setError('El nombre del hábito es obligatorio');
@@ -45,9 +46,7 @@ export default function HabitForm({
   };
 
   return (
-    <Card className="max-w-2xl mx-auto">
-      <h3 className="text-xl font-bold mb-4">{title}</h3>
-      
+    <div>
       {error && (
         <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg">
           {error}
@@ -63,7 +62,18 @@ export default function HabitForm({
           onChange={handleChange}
           required
         />
-        
+
+        {showCategory && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Categoría
+            </label>
+            <div className="px-4 py-2 bg-gray-100 border border-gray-300 rounded-lg text-gray-600">
+              📋 Personalizado
+            </div>
+          </div>
+        )}
+
         <Input
           label="Descripción"
           name="descripcion"
@@ -90,6 +100,6 @@ export default function HabitForm({
           </Button>
         </div>
       </form>
-    </Card>
+    </div>
   );
 }
