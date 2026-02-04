@@ -199,40 +199,42 @@ export default function Home() {
                             <p className="text-gray-600">No hay hábitos disponibles en el catálogo</p>
                         </Card>
                     ) : (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 px-2">
-                            {habitosFiltrados.map((habito) => {
-                                    const yaAgregado = habitosYaAgregados.includes(habito.id);
-                                    const descripcionBreve = habito.descripcion_breve || habito.descripcion;
-                                    return (
-                                        <button
-                                            key={habito.id}
-                                            onClick={() => !yaAgregado && agregarHabito(habito.id)}
-                                            disabled={yaAgregado}
-                                            className={`w-full p-6 rounded-xl shadow-lg transition-all transform hover:scale-105 ${yaAgregado
-                                                ? 'bg-gray-300 cursor-not-allowed opacity-60'
-                                                : 'bg-gradient-to-br from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 cursor-pointer'
-                                                }`}
-                                        >
-                                            {habito.categoria?.nombre && (
-                                                <span className="inline-block mb-3 px-3 py-1 bg-white text-black-700 text-xs rounded-full">
-                                                    {habito.categoria.nombre}
-                                                </span>
-                                            )}
-                                            <h3 className="text-black font-bold text-lg mb-2">
-                                                {habito.nombre}
-                                            </h3>
-                                            <p className="text-black text-sm opacity-90">
-                                                {limitarTexto(descripcionBreve, 90)}
-                                            </p>
-                                            {yaAgregado && (
-                                                <span className="inline-block mt-3 px-3 py-1 bg-white text-black-700 text-xs rounded-full">
-                                                    ✓ Agregado
-                                                </span>
-                                            )}
-                                        </button>
-                                    );
-                                })}
-                             </div>
+                        <div className="habitos-scroll overflow-x-auto pb-3">
+                            <div className="flex gap-4 min-w-max px-2">
+                                {habitosFiltrados.map((habito) => {
+                                        const yaAgregado = habitosYaAgregados.includes(habito.id);
+                                        const descripcionBreve = habito.descripcion_breve || habito.descripcion;
+                                        return (
+                                            <button
+                                                key={habito.id}
+                                                onClick={() => !yaAgregado && agregarHabito(habito.id)}
+                                                disabled={yaAgregado}
+                                                className={`w-64 flex-shrink-0 p-6 rounded-xl shadow-lg transition-all transform hover:scale-105 ${yaAgregado
+                                                    ? 'bg-gray-300 cursor-not-allowed opacity-60'
+                                                    : 'bg-gradient-to-br from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 cursor-pointer'
+                                                    }`}
+                                            >
+                                                {habito.categoria?.nombre && (
+                                                    <span className="inline-block mb-3 px-3 py-1 bg-white text-black-700 text-xs rounded-full">
+                                                        {habito.categoria.nombre}
+                                                    </span>
+                                                )}
+                                                <h3 className="text-black font-bold text-lg mb-2">
+                                                    {habito.nombre}
+                                                </h3>
+                                                <p className="text-black text-sm opacity-90">
+                                                    {limitarTexto(descripcionBreve, 90)}
+                                                </p>
+                                                {yaAgregado && (
+                                                    <span className="inline-block mt-3 px-3 py-1 bg-white text-black-700 text-xs rounded-full">
+                                                        ??? Agregado
+                                                    </span>
+                                                )}
+                                            </button>
+                                        );
+                                    })}
+                            </div>
+                        </div>
                     )}
                 </div>
                 {/* Crear hábito personalizado */}

@@ -17,13 +17,20 @@ const usuarioController = {
             }
 
             // Verificar si usuario ya existe
-            const existeUsuario = await Usuario.findOne({ 
-                where: { email } 
-            });
-            
-            if (existeUsuario) {
-                return res.status(400).json({ 
-                    error: "El email ya está registrado" 
+            const [existeEmail, existeUsername] = await Promise.all([
+                Usuario.findOne({ where: { email } }),
+                Usuario.findOne({ where: { username } })
+            ]);
+
+            if (existeEmail) {
+                return res.status(400).json({
+                    error: "El email ya esta registrado"
+                });
+            }
+
+            if (existeUsername) {
+                return res.status(400).json({
+                    error: "El usuario ya esta registrado"
                 });
             }
 
@@ -66,8 +73,24 @@ const usuarioController = {
             });
         } catch (error) {
             console.error('Error en registro:', error);
-            res.status(500).json({ 
-                error: "Error en el servidor al registrar usuario" 
+
+            // Errores de validacion de Sequelize
+            if (error.name === 'SequelizeValidationError') {
+                const messages = (error.errors || []).map(e => e.message);
+                return res.status(400).json({
+                    error: messages[0] || "Datos invalidos"
+                });
+            }
+
+            // Errores de unicidad (email/username)
+            if (error.name === 'SequelizeUniqueConstraintError') {
+                return res.status(400).json({
+                    error: "Email o usuario ya registrado"
+                });
+            }
+
+            res.status(500).json({
+                error: "Error en el servidor al registrar usuario"
             });
         }
     },
