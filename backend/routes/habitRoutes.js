@@ -13,11 +13,8 @@ router.get('/habitos', async (req, res) => {
     }
 });
 
-// Todas las rutas siguientes requieren autenticación
-router.use(authMiddleware);
-
 // Obtener lista de hábitos del usuario
-router.get('/lista-habitos', async (req, res) => {
+router.get('/lista-habitos', authMiddleware, async (req, res) => {
     try {
         const result = await HabitService.getUserHabits(req.userId);
         res.json(result);
@@ -27,7 +24,7 @@ router.get('/lista-habitos', async (req, res) => {
 });
 
 // Agregar hábito (desde catálogo o personalizado)
-router.post('/lista-habitos', async (req, res) => {
+router.post('/lista-habitos', authMiddleware, async (req, res) => {
     try {
         let result;
         if (req.body.habito_id) {
@@ -42,7 +39,7 @@ router.post('/lista-habitos', async (req, res) => {
 });
 
 // Actualizar hábito (estado o datos)
-router.patch('/lista-habitos/:id', async (req, res) => {
+router.patch('/lista-habitos/:id', authMiddleware, async (req, res) => {
     try {
         const result = await HabitService.updateHabit(req.params.id, req.body, req.userId);
         res.json(result);
@@ -52,7 +49,7 @@ router.patch('/lista-habitos/:id', async (req, res) => {
 });
 
 // Cambiar estado de hábito (completado/pendiente)
-router.post('/lista-habitos/:id/toggle-status', async (req, res) => {
+router.post('/lista-habitos/:id/toggle-status', authMiddleware, async (req, res) => {
     try {
         const { estado } = req.body;
         if (!estado || !['pendiente', 'completado'].includes(estado)) {
@@ -67,7 +64,7 @@ router.post('/lista-habitos/:id/toggle-status', async (req, res) => {
 });
 
 // Eliminar hábito
-router.delete('/lista-habitos/:id', async (req, res) => {
+router.delete('/lista-habitos/:id', authMiddleware, async (req, res) => {
     try {
         const result = await HabitService.deleteHabit(req.params.id, req.userId);
         res.json({ message: "Hábito eliminado correctamente", habit: result });

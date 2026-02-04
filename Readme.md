@@ -321,6 +321,7 @@ Este es un proyecto académico, pero las sugerencias son bienvenidas:
 
 
 
+
 ```
 ```
 awi-project
@@ -331,7 +332,7 @@ awi-project
 │  ├─ controllers
 │  │  ├─ adminController.js
 │  │  └─ usuarioController.js
-│  ├─ docker-compose.yml
+│  ├─ Dockerfile
 │  ├─ init.sql
 │  ├─ middleware
 │  │  └─ auth.js
@@ -347,11 +348,15 @@ awi-project
 │  │     ├─ Usuario.js
 │  │     └─ UsuarioHabito.js
 │  ├─ routes
+│  │  ├─ adminRoutes.js
 │  │  ├─ habitRoutes.js
 │  │  └─ usuarioRoutes.js
 │  ├─ server.js
 │  └─ services
+│     ├─ adminService.js
 │     └─ habitService.js
+├─ docker-compose.yml
+├─ docker.sh
 ├─ frontend
 │  ├─ eslint.config.js
 │  ├─ index.html
@@ -382,6 +387,10 @@ awi-project
 │  │  ├─ index.css
 │  │  ├─ main.jsx
 │  │  ├─ pages
+│  │  │  ├─ AdminCategories.jsx
+│  │  │  ├─ AdminDashboard.jsx
+│  │  │  ├─ AdminHabits.jsx
+│  │  │  ├─ AdminUsers.jsx
 │  │  │  ├─ Home.jsx
 │  │  │  ├─ Profile.jsx
 │  │  │  └─ Statistics.jsx

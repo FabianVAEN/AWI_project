@@ -17,9 +17,10 @@ app.use(cors(corsOptions));
 app.use(express.json());
 
 // Rutas
-app.use('/api', habitRoutes);
+
 app.use('/api/usuarios', usuarioRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api', habitRoutes);
 
 // Ruta de salud
 app.get('/api/health', (req, res) => {
