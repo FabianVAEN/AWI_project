@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Button, Input, Card } from '../common';
+import { Card, Button, Input } from '../../components/common';
 import { Link, useNavigate } from 'react-router-dom';
 import AuthService from '../../services/authService';
 
@@ -65,7 +65,6 @@ export default function Login() {
                         name="email"
                         value={formData.email}
                         onChange={handleChange}
-                        maxLength={30}
                         required
                     />
 
@@ -75,8 +74,6 @@ export default function Login() {
                         name="password"
                         value={formData.password}
                         onChange={handleChange}
-                        minLength={6}
-                        maxLength={30}
                         required
                     />
 

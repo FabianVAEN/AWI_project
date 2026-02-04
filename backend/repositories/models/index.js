@@ -37,7 +37,11 @@ UsuarioHabito.hasMany(Seguimiento, { foreignKey: 'usuario_habito_id', as: 'regis
 Seguimiento.belongsTo(UsuarioHabito, { foreignKey: 'usuario_habito_id' });
 
 // 5. Hábitos Personalizados (1:N)
-Usuario.hasMany(Habito, { foreignKey: 'usuario_id', as: 'habitos_creados' });
+Usuario.hasMany(Habito, { 
+    foreignKey: 'usuario_id', 
+    as: 'habitos_creados',
+    onDelete: 'CASCADE' // Si se borra el usuario, se borran sus hábitos personalizados
+});
 Habito.belongsTo(Usuario, { foreignKey: 'usuario_id', as: 'creador' });
 
 module.exports = {

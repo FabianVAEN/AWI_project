@@ -1,120 +1,16 @@
-# AWI – Construye Hábitos Saludables
+# React + Vite
 
-AWI es una aplicación web diseñada para ayudar a los usuarios a gestionar y realizar un seguimiento de sus hábitos diarios de forma sencilla, intuitiva y visual.
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
----
+Currently, two official plugins are available:
 
-## Características
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
 
-- **Catálogo de Hábitos**  
-  Selección de hábitos predefinidos como beber agua, ejercicio, meditación, entre otros.
+## React Compiler
 
-- **Gestión Personal**  
-  Permite agregar y eliminar hábitos de una lista personal.
+The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
 
-- **Seguimiento de Hábitos**  
-  Los hábitos pueden marcarse como:
-  - Por hacer  
-  - En progreso  
-  - Completado  
+## Expanding the ESLint configuration
 
-- **Persistencia de Datos**  
-  La información se guarda en una base de datos **PostgreSQL**.
-
----
-
-## Requisitos Previos
-
-Antes de comenzar, asegúrate de tener instalado:
-
-1. **Node.js** (versión 16 o superior)  
-2. **PostgreSQL** (configurado y en ejecución)  
-3. **Git**
-
----
-
-## Instalación y Configuración
-
-### 1️ Clonar el repositorio
-
-```bash
-git clone [nombre-del-repositorio]
-cd awi-project
-```
-
----
-
-### 2️ Configurar el Backend
-
-```bash
-cd backend
-npm install
-```
-
-#### Configuración de la Base de Datos
-
-Crea una base de datos en PostgreSQL llamada:
-
-```text
-awi_db
-```
-
-Ejemplo de variables de entorno:
-
-```env
-DB_HOST=localhost
-DB_USER=postgres
-DB_PASSWORD=tu_password
-DB_NAME=awi_db
-DB_PORT=5432
-```
-
-Inicia el backend:
-
-```bash
-npm run dev
-```
-
----
-
-### 3️ Configurar el Frontend
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
----
-
-## Instrucciones de Uso
-
-### Agregar un hábito
-
-1. Ve a **Hábitos Disponibles**.
-2. Selecciona un hábito.
-3. Se agregará a **Mi Lista de Hábitos**.
-
-### Completar un hábito
-
-1. Haz clic en **Completar**.
-2. El hábito cambia a **En Progreso**.
-3. Usa **Quitar** si deseas eliminarlo.
-
----
-
-## Tecnologías Utilizadas
-
-- React + Tailwind CSS  
-- Node.js + Express  
-- PostgreSQL  
-
----
-
-
-
-
-
-
-
-
+If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.

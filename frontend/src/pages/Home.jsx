@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Input, Card } from '../components/common';
+import { Card, Button, LoadingScreen, HabitForm } from '../components/common';
 import HabitService from '../services/habitService';
 
 export default function Home() {
@@ -8,10 +8,8 @@ export default function Home() {
     const [listaHabitos, setListaHabitos] = useState([]);
     const [error, setError] = useState('');
     const [showCreateForm, setShowCreateForm] = useState(false);
-    const [formData, setFormData] = useState({ nombre: '', descripcion: '' });
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [editando, setEditando] = useState(null);
-    const [categoriaActiva, setCategoriaActiva] = useState('all');
 
     useEffect(() => {
         // Pantalla de carga por 2 segundos
@@ -49,18 +47,11 @@ export default function Home() {
         }
     };
 
-    const crearHabitoPersonalizado = async (e) => {
-        e.preventDefault();
-        if (!formData.nombre.trim()) {
-            setError('El nombre del hábito es obligatorio');
-            return;
-        }
-
+    const crearHabitoPersonalizado = async (formData) => {
         try {
             setIsSubmitting(true);
             setError('');
             await HabitService.createCustomHabit(formData);
-            setFormData({ nombre: '', descripcion: '' });
             setShowCreateForm(false);
             await cargarDatos();
         } catch (err) {
@@ -70,28 +61,32 @@ export default function Home() {
         }
     };
 
-    const editarHabito = async (e) => {
-        e.preventDefault();
+    const editarHabito = async (formData) => {
         try {
             setError('');
-            await HabitService.updateHabit(editando.id, {
-            nombre: editando.nombre,
-            descripcion: editando.descripcion
-            });
+            await HabitService.updateHabit(editando.id, formData);
             setEditando(null);
             await cargarDatos();
         } catch (err) {
             setError('Error al editar hábito');
         }
-        };
+    };
 
-    const cambiarEstado = async (id, nuevoEstado) => {
+    const marcarCompletado = async (id) => {
         try {
             setError('');
-            await HabitService.updateHabit(id, { estado: nuevoEstado });
-            await cargarDatos();
+            // Obtener el hábito actual
+            const habitoActual = listaHabitos.find(h => h.id === id);
+            if (!habitoActual) return;
+
+            // Alternar estado
+            const nuevoEstado = habitoActual.estado === 'completado' ? 'pendiente' : 'completado';
+
+            await HabitService.toggleHabitStatus(id, nuevoEstado);
+            await cargarDatos(); // Esto recarga los datos
         } catch (err) {
-            setError('Error al actualizar estado');
+            setError('Error al cambiar estado del hábito');
+            console.error(err);
         }
     };
 
@@ -108,40 +103,13 @@ export default function Home() {
     };
 
     if (loading) {
-        return (
-            <div className="min-h-screen bg-gradient-to-br from-emerald-400 via-teal-500 to-cyan-600 flex items-center justify-center">
-                <div className="text-center">
-                    <h1 className="text-8xl font-bold text-white mb-4 animate-pulse">AWI</h1>
-                    <div className="flex justify-center gap-2">
-                        <div className="w-3 h-3 bg-white rounded-full animate-bounce"></div>
-                        <div className="w-3 h-3 bg-white rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                        <div className="w-3 h-3 bg-white rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                    </div>
-                </div>
-            </div>
-        );
+        return <LoadingScreen title="AWI" variant="splash" />;
     }
 
     const habitosYaAgregados = listaHabitos
         .filter(h => h.habito_id !== null)
         .map(h => h.habito_id);
 
-    const categorias = Array.from(
-        new Map(
-            habitos
-                .filter(h => h.categoria)
-                .map(h => [h.categoria.id, h.categoria])
-        ).values()
-    );
-
-    const habitosFiltrados = categoriaActiva === 'all'
-        ? habitos
-        : habitos.filter(h => h.categoria && h.categoria.id === categoriaActiva);
-
-    const limitarTexto = (texto, max = 120) => {
-        if (!texto) return '';
-        return texto.length > max ? `${texto.slice(0, max).trim()}...` : texto;
-    };
     return (
         <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 py-8 px-4">
             <div className="max-w-7xl mx-auto">
@@ -166,75 +134,44 @@ export default function Home() {
                     <h2 className="text-2xl font-semibold text-gray-800 mb-6 text-center">
                         Hábitos Disponibles
                     </h2>
-                    {categorias.length > 0 && (
-                        <div className="flex flex-wrap justify-center gap-2 mb-6">
-                            <button
-                                type="button"
-                                onClick={() => setCategoriaActiva('all')}
-                                className={`px-4 py-2 rounded-full text-sm font-semibold transition-all border ${categoriaActiva === 'all'
-                                    ? 'bg-emerald-600 text-white border-emerald-600 shadow'
-                                    : 'bg-white text-emerald-700 border-emerald-200 hover:bg-emerald-50'
-                                    }`}
-                            >
-                                Todas
-                            </button>
-                            {categorias.map((categoria) => (
-                                <button
-                                    key={categoria.id}
-                                    type="button"
-                                    onClick={() => setCategoriaActiva(categoria.id)}
-                                    className={`px-4 py-2 rounded-full text-sm font-semibold transition-all border ${categoriaActiva === categoria.id
-                                        ? 'bg-emerald-600 text-white border-emerald-600 shadow'
-                                        : 'bg-white text-emerald-700 border-emerald-200 hover:bg-emerald-50'
-                                        }`}
-                                >
-                                    {categoria.nombre}
-                                </button>
-                            ))}
-                        </div>
-                    )}
-                
                     {habitos.length === 0 ? (
                         <Card variant="warning" className="text-center">
                             <p className="text-gray-600">No hay hábitos disponibles en el catálogo</p>
                         </Card>
                     ) : (
-                        <div className="grid grid-flow-col auto-cols-[18rem] gap-4 px-2 pb-2 overflow-x-auto">
-                            {habitosFiltrados.map((habito) => {
+                        <div className="overflow-x-auto pb-4">
+                            <div className="flex gap-4 min-w-max px-4">
+                                {habitos.map((habito) => {
                                     const yaAgregado = habitosYaAgregados.includes(habito.id);
-                                    const descripcionBreve = habito.descripcion_breve || habito.descripcion;
                                     return (
                                         <button
                                             key={habito.id}
                                             onClick={() => !yaAgregado && agregarHabito(habito.id)}
                                             disabled={yaAgregado}
-                                            className={`w-full p-6 rounded-xl shadow-lg transition-all transform hover:scale-105 ${yaAgregado
+                                            className={`flex-shrink-0 w-64 p-6 rounded-xl shadow-lg transition-all transform hover:scale-105 ${yaAgregado
                                                 ? 'bg-gray-300 cursor-not-allowed opacity-60'
                                                 : 'bg-gradient-to-br from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 cursor-pointer'
                                                 }`}
                                         >
-                                            {habito.categoria?.nombre && (
-                                                <span className="inline-block mb-3 px-3 py-1 bg-white text-black-700 text-xs rounded-full">
-                                                    {habito.categoria.nombre}
-                                                </span>
-                                            )}
-                                            <h3 className="text-black font-bold text-lg mb-2">
+                                            <h3 className="text-white font-bold text-lg mb-2">
                                                 {habito.nombre}
                                             </h3>
-                                            <p className="text-black text-sm opacity-90">
-                                                {limitarTexto(descripcionBreve, 90)}
+                                            <p className="text-white text-sm opacity-90">
+                                                {habito.descripcion_breve}
                                             </p>
                                             {yaAgregado && (
-                                                <span className="inline-block mt-3 px-3 py-1 bg-white text-black-700 text-xs rounded-full">
+                                                <span className="inline-block mt-3 px-3 py-1 bg-white text-gray-700 text-xs rounded-full">
                                                     ✓ Agregado
                                                 </span>
                                             )}
                                         </button>
                                     );
                                 })}
-                             </div>
+                            </div>
+                        </div>
                     )}
                 </div>
+
                 {/* Crear hábito personalizado */}
                 <div className="mb-12">
                     <div className="text-center mb-6">
@@ -247,150 +184,104 @@ export default function Home() {
                     </div>
 
                     {showCreateForm && (
-                        <Card className="max-w-2xl mx-auto">
-                            <form onSubmit={crearHabitoPersonalizado} className="space-y-4">
-                                <Input
-                                    label="Nombre del Hábito"
-                                    placeholder="Ej: Meditar 20 minutos"
-                                    value={formData.nombre}
-                                    onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
-                                    required
-                                />
-                                <Input
-                                    label="Descripción"
-                                    placeholder="Ej: Práctica diaria de meditación"
-                                    type="textarea"
-                                    value={formData.descripcion}
-                                    onChange={(e) => setFormData({ ...formData, descripcion: e.target.value })}
-                                />
-                                <div className="flex gap-3 justify-end">
-                                    <Button
-                                        variant="secondary"
-                                        onClick={() => {
-                                            setShowCreateForm(false);
-                                            setFormData({ nombre: '', descripcion: '' });
-                                        }}
-                                    >
-                                        Cancelar
-                                    </Button>
-                                    <Button
-                                        variant="success"
-                                        type="submit"
-                                        isLoading={isSubmitting}
-                                    >
-                                        Crear Hábito
-                                    </Button>
-                                </div>
-                            </form>
-                        </Card>
+                        <HabitForm
+                            mode="create"
+                            initialData={{ nombre: '', descripcion_breve: '' }}
+                            onSubmit={crearHabitoPersonalizado}
+                            onCancel={() => setShowCreateForm(false)}
+                            isSubmitting={isSubmitting}
+                            title="Crear Hábito Personalizado"
+                        />
                     )}
                 </div>
 
-                 {editando && (
-                <Card className="max-w-2xl mx-auto mb-6">
-                    <h3 className="text-xl font-bold mb-4">Editar Hábito</h3>
-                    <form onSubmit={editarHabito} className="space-y-4">
-                    <Input
-                        label="Nombre"
-                        value={editando.nombre}
-                        onChange={(e) => setEditando({...editando, nombre: e.target.value})}
-                        required
-                    />
-                    <Input
-                        label="Descripción"
-                        type="textarea"
-                        value={editando.descripcion}
-                        onChange={(e) => setEditando({...editando, descripcion: e.target.value})}
-                    />
-                    <div className="flex gap-3 justify-end">
-                        <Button variant="secondary" onClick={() => setEditando(null)}>
-                        Cancelar
-                        </Button>
-                        <Button variant="success" type="submit">
-                        Guardar Cambios
-                        </Button>
+                {/* Editar hábito */}
+                {editando && (
+                    <div className="mb-12">
+                        <HabitForm
+                            mode="edit"
+                            initialData={{
+                                nombre: editando.nombre,
+                                descripcion_breve: editando.descripcion_breve || editando.descripcion
+                            }}
+                            onSubmit={editarHabito}
+                            onCancel={() => setEditando(null)}
+                            isSubmitting={isSubmitting}
+                            title="Editar Hábito"
+                        />
                     </div>
-                    </form>
-                </Card>
-)}
+                )}
 
-                {/* Lista de hábitos del usuario */}
-                <div className="bg-white rounded-2xl shadow-xl p-8">
-                    <h2 className="text-2xl font-semibold text-gray-800 mb-6">
-                        Mi Lista de Hábitos ({listaHabitos.length})
+                {/* Mi Lista de Hábitos */}
+                <div>
+                    <h2 className="text-2xl font-semibold text-gray-800 mb-6 text-center">
+                        Mi Lista de Hábitos
                     </h2>
-
                     {listaHabitos.length === 0 ? (
-                        <div className="text-center py-12">
-                            <p className="text-gray-400 text-lg">
-                                Tu lista está vacía. Agrega hábitos desde arriba para comenzar.
-                            </p>
-                        </div>
+                        <Card className="text-center">
+                            <p className="text-gray-600">Aún no has agregado hábitos. ¡Comienza ahora!</p>
+                        </Card>
                     ) : (
-                        <div className="space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {listaHabitos.map((habito) => (
-                                <div
-                                    key={habito.id}
-                                    className={`p-5 rounded-lg border-2 transition-all ${habito.estado === 'hecho'
-                                        ? 'bg-green-50 border-green-300'
-                                        : 'bg-gray-50 border-gray-300'
-                                        }`}
-                                >
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex-1">
-                                            <h3
-                                                className={`text-lg font-semibold ${habito.estado === 'hecho' ? 'line-through text-gray-500' : 'text-gray-800'
-                                                    }`}
-                                            >
+                                <Card key={habito.id} className="flex flex-col">
+                                    <div className="flex-1">
+                                        {/* Estado del hábito - NUEVO */}
+                                        <div className="flex justify-between items-start mb-2">
+                                            <h3 className="text-lg font-semibold text-gray-800">
                                                 {habito.nombre}
                                             </h3>
-                                            <p className="text-sm text-gray-600 mt-1">
-                                                {habito.descripcion}
-                                            </p>
-                                        </div>
-
-                                        <div className="flex items-center gap-3">
-                                            <Button
-                                                size="sm"
-                                                variant={habito.estado === 'hecho' ? 'secondary' : 'success'}
-                                                onClick={() =>
-                                                    cambiarEstado(
-                                                        habito.id,
-                                                        habito.estado === 'por hacer' ? 'hecho' : 'por hacer'
-                                                    )
-                                                }
-                                            >
-                                                {habito.estado === 'hecho' ? 'Desmarcar' : 'Completar'}
-                                            </Button>
-
-                                            <Button
-                                                size="sm"
-                                                variant="danger"
-                                                onClick={() => eliminarHabito(habito.id)}
-                                            >
-                                                Eliminar
-                                            </Button>
-
-                                            <Button
-                                                size="sm"
-                                                variant="ghost"
-                                                disabled={habito.es_predeterminado}
-                                                onClick={() => !habito.es_predeterminado && setEditando(habito)}
-                                                >
-                                                    {habito.es_predeterminado ? ' (Predeterminado)' : 'Editar'}
-                                                </Button>
-
-                                            <span
-                                                className={`px-4 py-2 rounded-full text-sm font-medium ${habito.estado === 'hecho'
-                                                    ? 'bg-green-100 text-green-800'
-                                                    : 'bg-orange-100 text-orange-800'
-                                                    }`}
-                                            >
-                                                {habito.estado === 'hecho' ? '✓ Hecho' : '○ Por hacer'}
+                                            <span className={`px-2 py-1 rounded text-xs font-medium ${habito.estado === 'completado'
+                                                ? 'bg-green-100 text-green-800 border border-green-200'
+                                                : 'bg-yellow-100 text-yellow-800 border border-yellow-200'}`}>
+                                                {habito.estado === 'completado' ? '✓ Completado' : '⏳ Pendiente'}
                                             </span>
                                         </div>
+
+                                        {/* Descripción breve - NUEVO */}
+                                        <p className="text-gray-600 text-sm mb-2">
+                                            {habito.descripcion_breve || habito.descripcion}
+                                        </p>
+
+                                        {/* Racha */}
+                                        {habito.racha_actual > 0 && (
+                                            <div className="mb-4 p-2 bg-emerald-50 rounded-lg">
+                                                <p className="text-sm text-emerald-700">
+                                                    🔥 Racha: {habito.racha_actual} días
+                                                </p>
+                                            </div>
+                                        )}
                                     </div>
-                                </div>
+
+                                    {/* Botones - MODIFICADO */}
+                                    <div className="flex gap-2 pt-4 border-t">
+                                        <Button
+                                            variant={habito.estado === 'completado' ? 'secondary' : 'success'}
+                                            size="sm"
+                                            onClick={() => marcarCompletado(habito.id)}
+                                            className="flex-1"
+                                        >
+                                            {habito.estado === 'completado' ? '↶ Pendiente' : '✓ Completar'}
+                                        </Button>
+                                        <Button
+                                            variant="secondary"
+                                            size="sm"
+                                            onClick={() => !habito.es_predeterminado && setEditando(habito)}
+                                            className="flex-1"
+                                            disabled={habito.es_predeterminado}
+                                        >
+                                            {habito.es_predeterminado ? 'No editable' : 'Editar'}
+                                        </Button>
+                                        <Button
+                                            variant="danger"
+                                            size="sm"
+                                            onClick={() => eliminarHabito(habito.id)}
+                                            className="flex-1"
+                                        >
+                                            Eliminar
+                                        </Button>
+                                    </div>
+                                </Card>
                             ))}
                         </div>
                     )}

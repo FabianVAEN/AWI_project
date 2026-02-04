@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  # Servicio de PostgreSQL
+  postgres:
+    image: postgres:15
+    container_name: awi_db
+    ports:
+      - "5435:5432" 
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: awi_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - awi-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d awi_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Servicio del Backend (API)
+  backend:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: awi_backend
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432 
+      DB_NAME: awi_db
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      PORT: 3000
+      NODE_ENV: development
+      JWT_SECRET: tu_secreto_jwt_aqui_cambiar_en_produccion
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - awi-network
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    command: npm start
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+
+networks:
+  awi-network:
+    driver: bridge

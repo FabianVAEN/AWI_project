@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Button, Input, Card } from '../common';
+import { Card, Button, Input } from '../../components/common'; 
 import { Link, useNavigate } from 'react-router-dom';
 import AuthService from '../../services/authService';
 
@@ -37,15 +37,6 @@ export default function Register() {
             setError('La contraseña debe tener al menos 6 caracteres');
             return;
         }
-        const soloLetras = /^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+$/;
-        if (!soloLetras.test(formData.primer_nombre)) {
-            setError('El nombre solo puede contener letras');
-            return;
-        }
-        if (formData.segundo_nombre && !soloLetras.test(formData.segundo_nombre)) {
-            setError('El apellido solo puede contener letras');
-            return;
-  }
 
         try {
             setLoading(true);
@@ -64,7 +55,6 @@ export default function Register() {
                 localStorage.setItem('user', JSON.stringify(response.usuario));
                 navigate('/');
             }
-
         } catch (err) {
             setError(err.message || 'Error en el registro');
         } finally {
@@ -87,22 +77,18 @@ export default function Register() {
                 )}
 
                 <form onSubmit={handleSubmit} className="space-y-4">
-                    
                     <div className="grid grid-cols-2 gap-4">
                         <Input
                             label="Nombre"
                             name="primer_nombre"
                             value={formData.primer_nombre}
                             onChange={handleChange}
-                            maxLength={25}
                             required
-                            
                         />
                         <Input
                             label="Apellido"
                             name="segundo_nombre"
                             value={formData.segundo_nombre}
-                            maxLength={25}
                             onChange={handleChange}
                         />
                     </div>
@@ -114,7 +100,6 @@ export default function Register() {
                         onChange={handleChange}
                         required
                         minLength={3}
-                        maxLength={25}
                     />
 
                     <Input
@@ -123,7 +108,6 @@ export default function Register() {
                         name="email"
                         value={formData.email}
                         onChange={handleChange}
-                        maxLength={30}
                         required
                     />
 
