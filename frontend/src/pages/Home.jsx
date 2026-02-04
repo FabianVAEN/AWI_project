@@ -186,7 +186,7 @@ export default function Home() {
                     {showCreateForm && (
                         <HabitForm
                             mode="create"
-                            initialData={{ nombre: '', descripcion_breve: '', descripcion_larga: '' }}
+                            initialData={{ nombre: '', descripcion_breve: '' }}
                             onSubmit={crearHabitoPersonalizado}
                             onCancel={() => setShowCreateForm(false)}
                             isSubmitting={isSubmitting}
@@ -202,8 +202,7 @@ export default function Home() {
                             mode="edit"
                             initialData={{
                                 nombre: editando.nombre,
-                                descripcion_breve: editando.descripcion_breve || editando.descripcion,
-                                descripcion_larga: editando.descripcion_larga || ''
+                                descripcion_breve: editando.descripcion_breve || editando.descripcion
                             }}
                             onSubmit={editarHabito}
                             onCancel={() => setEditando(null)}
@@ -244,13 +243,6 @@ export default function Home() {
                                             {habito.descripcion_breve || habito.descripcion}
                                         </p>
 
-                                        {/* Descripción larga (si existe) - NUEVO */}
-                                        {habito.descripcion_larga && (
-                                            <p className="text-gray-500 text-xs italic mb-3">
-                                                {habito.descripcion_larga}
-                                            </p>
-                                        )}
-
                                         {/* Racha */}
                                         {habito.racha_actual > 0 && (
                                             <div className="mb-4 p-2 bg-emerald-50 rounded-lg">
@@ -274,10 +266,11 @@ export default function Home() {
                                         <Button
                                             variant="secondary"
                                             size="sm"
-                                            onClick={() => setEditando(habito)}
+                                            onClick={() => !habito.es_predeterminado && setEditando(habito)}
                                             className="flex-1"
+                                            disabled={habito.es_predeterminado}
                                         >
-                                            Editar
+                                            {habito.es_predeterminado ? 'No editable' : 'Editar'}
                                         </Button>
                                         <Button
                                             variant="danger"

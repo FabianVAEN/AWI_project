@@ -1,11 +1,12 @@
 const { Habito, UsuarioHabito, Seguimiento, Categoria } = require('./models');
 
 class HabitRepository {
-    // Obtener catálogo de hábitos predeterminados
+    // Obtener catálogo de hábitos predeterminados con su categoría
     async findAllDefaults() {
         try {
             return await Habito.findAll({
-                where: { es_predeterminado: true }
+                where: { es_predeterminado: true },
+                include: [{ model: Categoria, as: 'categoria' }]
             });
         } catch (error) {
             console.error('Error en findAllDefaults:', error);
@@ -24,15 +25,16 @@ class HabitRepository {
         }
     }
 
-    // Obtener lista del usuario (Simulando usuario_id = 1 por ahora)
-    async findUserHabits() {
+    // Obtener lista del usuario autenticado
+    async findUserHabits(usuario_id) {
         try {
             const suscripciones = await UsuarioHabito.findAll({
-                where: { usuario_id: 1 },
+                where: { usuario_id },
                 include: [
                     {
                         model: Habito,
-                        as: 'detalle_habito'
+                        as: 'detalle_habito',
+                        include: [{ model: Categoria, as: 'categoria' }]
                     },
                     {
                         model: Seguimiento,
@@ -46,7 +48,6 @@ class HabitRepository {
             });
 
             return suscripciones.map(s => {
-                // Determinar estado de hoy
                 const seguimientoHoy = s.registros && s.registros.length > 0
                     ? s.registros[0]
                     : null;
@@ -59,7 +60,8 @@ class HabitRepository {
                     nombre: s.detalle_habito.nombre,
                     descripcion_breve: s.detalle_habito.descripcion_breve,
                     descripcion_larga: s.detalle_habito.descripcion_larga,
-                    estado: estadoHoy, // Estado de HOY
+                    categoria: s.detalle_habito.categoria ? s.detalle_habito.categoria.nombre : 'Sin categoría',
+                    estado: estadoHoy,
                     racha_actual: s.racha_actual
                 };
             });
@@ -69,19 +71,21 @@ class HabitRepository {
         }
     }
 
-    async findUserHabitById(id) {
+    async findUserHabitById(id, usuario_id) {
         try {
-            return await UsuarioHabito.findByPk(id);
+            return await UsuarioHabito.findOne({
+                where: { id, usuario_id }
+            });
         } catch (error) {
             console.error('Error en findUserHabitById:', error);
             throw error;
         }
     }
 
-    async findUserHabitByDefaultId(habito_id) {
+    async findUserHabitByDefaultId(habito_id, usuario_id) {
         try {
             return await UsuarioHabito.findOne({
-                where: { usuario_id: 1, habito_id }
+                where: { usuario_id, habito_id }
             });
         } catch (error) {
             console.error('Error en findUserHabitByDefaultId:', error);
@@ -90,9 +94,9 @@ class HabitRepository {
     }
 
     // Agregar a la lista (Suscripción)
-    async create(habitData) {
+    async create(habitData, usuario_id) {
         try {
-            // Si es un hábito personalizado (no viene del catálogo)
+            // Si es un hábito personalizado
             if (!habitData.habito_id) {
                 const categoriaPersonalizada = await Categoria.findOne({
                     where: { nombre: 'Personalizado' }
@@ -107,13 +111,13 @@ class HabitRepository {
                     descripcion_breve: habitData.descripcion,
                     es_predeterminado: false,
                     categoria_id: categoriaPersonalizada.id,
-                    usuario_id: 1
+                    usuario_id: usuario_id
                 });
                 habitData.habito_id = nuevoHabito.id;
             }
 
             const suscripcion = await UsuarioHabito.create({
-                usuario_id: 1,
+                usuario_id: usuario_id,
                 habito_id: habitData.habito_id
             });
 
@@ -121,7 +125,7 @@ class HabitRepository {
                 ...suscripcion.toJSON(),
                 nombre: habitData.nombre,
                 descripcion: habitData.descripcion,
-                estado: 'por hacer'
+                estado: 'pendiente'
             };
         } catch (error) {
             console.error('Error en create:', error);
@@ -129,10 +133,11 @@ class HabitRepository {
         }
     }
 
-    // Actualizar hábito (Estado o Rachas)
-    async update(id, data) {
+    async update(id, data, usuario_id) {
         try {
-            const suscripcion = await UsuarioHabito.findByPk(id);
+            const suscripcion = await UsuarioHabito.findOne({
+                where: { id, usuario_id }
+            });
             if (!suscripcion) return null;
 
             await suscripcion.update(data);
@@ -143,10 +148,11 @@ class HabitRepository {
         }
     }
 
-    // Eliminar hábito de la lista
-    async delete(id) {
+    async delete(id, usuario_id) {
         try {
-            const suscripcion = await UsuarioHabito.findByPk(id);
+            const suscripcion = await UsuarioHabito.findOne({
+                where: { id, usuario_id }
+            });
             if (!suscripcion) return null;
 
             const deletedData = suscripcion.toJSON();
@@ -156,6 +162,33 @@ class HabitRepository {
             console.error('Error en delete:', error);
             throw error;
         }
+    }
+
+    // --- MÉTODOS DE ADMINISTRACIÓN ---
+    async adminFindAllHabits() {
+        return await Habito.findAll({
+            include: [{ model: Categoria, as: 'categoria' }]
+        });
+    }
+
+    async adminCreateHabit(data) {
+        return await Habito.create({
+            ...data,
+            es_predeterminado: true
+        });
+    }
+
+    async adminUpdateHabit(id, data) {
+        const habito = await Habito.findByPk(id);
+        if (!habito) return null;
+        return await habito.update(data);
+    }
+
+    async adminDeleteHabit(id) {
+        const habito = await Habito.findByPk(id);
+        if (!habito) return null;
+        await habito.destroy();
+        return true;
     }
 }
 
