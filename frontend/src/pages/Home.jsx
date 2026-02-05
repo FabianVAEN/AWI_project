@@ -30,6 +30,8 @@ export default function Home() {
                 HabitService.getUserHabits()
             ]);
 
+             console.log('📊 Lista de hábitos:', listaData); // ← AGREGAR ESTA LÍNEA
+
             setHabitos(habitosData);
             setListaHabitos(listaData);
         } catch (err) {

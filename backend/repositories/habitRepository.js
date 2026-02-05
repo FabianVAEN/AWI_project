@@ -61,6 +61,7 @@ class HabitRepository {
                     descripcion_breve: s.detalle_habito.descripcion_breve,
                     descripcion_larga: s.detalle_habito.descripcion_larga,
                     categoria: s.detalle_habito.categoria ? s.detalle_habito.categoria.nombre : 'Sin categoría',
+                    es_predeterminado: s.detalle_habito.es_predeterminado, 
                     estado: estadoHoy,
                     racha_actual: s.racha_actual
                 };
