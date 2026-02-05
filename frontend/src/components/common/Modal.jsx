@@ -7,7 +7,7 @@ export default function Modal({ isOpen, onClose, title, children }) {
     <div className="fixed inset-0 z-50 overflow-y-auto">
       {/* Fondo oscuro */}
       <div 
-        className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm transition-opacity"
+        className="fixed inset-0 bg-opacity-50 backdrop-blur-sm transition-opacity"
         onClick={onClose}
       />
       

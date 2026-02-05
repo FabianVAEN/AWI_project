@@ -3,6 +3,8 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import Home from './pages/Home';
 import Profile from './pages/Profile';
 import Statistics from './pages/Statistics';
+import MyHabits from './pages/MyHabits';
+import myHabits from './pages/myHabits';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminCategories from './pages/AdminCategories';
 import AdminHabits from './pages/AdminHabits';
@@ -60,6 +62,28 @@ export default function App() {
                         <PrivateRoute>
                             <MainLayout>
                                 <Home />
+                            </MainLayout>
+                        </PrivateRoute>
+                    } 
+                />
+
+                <Route 
+                    path="/mis-habitos" 
+                    element={
+                        <PrivateRoute>
+                            <MainLayout>
+                                <MyHabits />
+                            </MainLayout>
+                        </PrivateRoute>
+                    } 
+                />
+                
+                <Route 
+                    path="/mis-habitos" 
+                    element={
+                        <PrivateRoute>
+                            <MainLayout>
+                                <MyHabits />
                             </MainLayout>
                         </PrivateRoute>
                     } 
