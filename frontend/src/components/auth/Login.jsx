@@ -65,6 +65,7 @@ export default function Login() {
                         name="email"
                         value={formData.email}
                         onChange={handleChange}
+                        maxLength={30}
                         required
                     />
 
@@ -74,6 +75,8 @@ export default function Login() {
                         name="password"
                         value={formData.password}
                         onChange={handleChange}
+                        minLength={6}
+                        maxLength={30}
                         required
                     />
 

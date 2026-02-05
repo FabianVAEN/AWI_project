@@ -11,6 +11,9 @@ export default function Home() {
     const [modalEditarAbierto, setModalEditarAbierto] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [habitoAEditar, setHabitoAEditar] = useState(null);
+    const [categoriaActiva, setCategoriaActiva] = useState('Todas');
+    const [expandedCatalog, setExpandedCatalog] = useState({});
+    const [expandedLista, setExpandedLista] = useState({});
 
     useEffect(() => {
         // Pantalla de carga por 2 segundos
@@ -112,6 +115,22 @@ export default function Home() {
         .filter(h => h.habito_id !== null)
         .map(h => h.habito_id);
 
+    const categorias = ['Todas', ...Array.from(new Set(
+        habitos.map(h => (h.categoria?.nombre || 'Sin Categoría'))
+    ))];
+
+    const habitosFiltrados = categoriaActiva === 'Todas'
+        ? habitos
+        : habitos.filter(h => (h.categoria?.nombre || 'Sin Categoría') === categoriaActiva);
+
+    const toggleCatalogDescripcion = (id) => {
+        setExpandedCatalog(prev => ({ ...prev, [id]: !prev[id] }));
+    };
+
+    const toggleListaDescripcion = (id) => {
+        setExpandedLista(prev => ({ ...prev, [id]: !prev[id] }));
+    };
+
     return (
         <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 py-8 px-4">
             <div className="max-w-7xl mx-auto">
@@ -136,6 +155,24 @@ export default function Home() {
                     <h2 className="text-2xl font-semibold text-gray-800 mb-6 text-center">
                         Hábitos Disponibles
                     </h2>
+                    {/* Filtros de categoría */}
+                    {categorias.length > 1 && (
+                        <div className="flex flex-wrap justify-center gap-2 mb-6">
+                            {categorias.map((categoria) => (
+                                <button
+                                    key={categoria}
+                                    type="button"
+                                    onClick={() => setCategoriaActiva(categoria)}
+                                    className={`px-4 py-2 rounded-full text-sm font-semibold transition-all ${categoriaActiva === categoria
+                                        ? 'bg-emerald-600 text-white shadow-md'
+                                        : 'bg-white text-emerald-700 border border-emerald-200 hover:bg-emerald-50'
+                                        }`}
+                                >
+                                    {categoria}
+                                </button>
+                            ))}
+                        </div>
+                    )}
                     {habitos.length === 0 ? (
                         <Card variant="warning" className="text-center">
                             <p className="text-gray-600">No hay hábitos disponibles en el catálogo</p>
@@ -143,16 +180,15 @@ export default function Home() {
                     ) : (
                         <div className="overflow-x-auto pb-4">
                             <div className="flex gap-4 min-w-max px-4">
-                                {habitos.map((habito) => {
+                                {habitosFiltrados.map((habito) => {
                                     const yaAgregado = habitosYaAgregados.includes(habito.id);
+                                    const expanded = !!expandedCatalog[habito.id];
                                     return (
-                                        <button
+                                        <div
                                             key={habito.id}
-                                            onClick={() => !yaAgregado && agregarHabito(habito.id)}
-                                            disabled={yaAgregado}
                                             className={`flex-shrink-0 w-64 p-6 rounded-xl shadow-lg transition-all transform hover:scale-105 ${yaAgregado
                                                 ? 'bg-gray-300 cursor-not-allowed opacity-60'
-                                                : 'bg-gradient-to-br from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 cursor-pointer'
+                                                : 'bg-gradient-to-br from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600'
                                                 }`}
                                         >
                                             <h3 className="text-white font-bold text-lg mb-2">
@@ -161,12 +197,41 @@ export default function Home() {
                                             <p className="text-white text-sm opacity-90">
                                                 {habito.descripcion_breve}
                                             </p>
+                                            {habito.descripcion_larga && (
+                                                <div className="mt-3">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => toggleCatalogDescripcion(habito.id)}
+                                                        className="text-white text-sm underline underline-offset-2"
+                                                    >
+                                                        {expanded ? 'Ver menos' : 'Ver más'}
+                                                    </button>
+                                                    {expanded && (
+                                                        <p className="text-white text-lg opacity-90 mt-2">
+                                                            {habito.descripcion_larga}
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            )}
                                             {yaAgregado && (
                                                 <span className="inline-block mt-3 px-3 py-1 bg-white text-gray-700 text-xs rounded-full">
                                                     ✓ Agregado
                                                 </span>
                                             )}
-                                        </button>
+                                            <div className="mt-4">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => !yaAgregado && agregarHabito(habito.id)}
+                                                    disabled={yaAgregado}
+                                                    className={`w-full px-4 py-2 rounded-lg text-sm font-semibold transition-all ${yaAgregado
+                                                        ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                                                        : 'bg-white text-emerald-700 hover:bg-emerald-50'
+                                                        }`}
+                                                >
+                                                    {yaAgregado ? 'Agregado' : 'Agregar'}
+                                                </button>
+                                            </div>
+                                        </div>
                                     );
                                 })}
                             </div>
@@ -238,8 +303,24 @@ export default function Home() {
                                         <p className="text-gray-600 text-sm mb-2">
                                             {habito.descripcion_breve || habito.descripcion}
                                         </p>
-
+                                        {habito.descripcion_larga && (
+                                            <div className="mb-2">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => toggleListaDescripcion(habito.id)}
+                                                    className="text-emerald-700 text-xs underline underline-offset-2"
+                                                >
+                                                    {expandedLista[habito.id] ? 'Ver menos' : 'Ver más'}
+                                                </button>
+                                                {expandedLista[habito.id] && (
+                                                    <p className="text-gray-600 text-lg mt-2">
+                                                        {habito.descripcion_larga}
+                                                    </p>
+                                                )}
+                                            </div>
+                                        )}
                                         {/* Racha */}
+                                        
                                         {habito.racha_actual > 0 && (
                                             <div className="mb-4 p-2 bg-emerald-50 rounded-lg">
                                                 <p className="text-sm text-emerald-700">

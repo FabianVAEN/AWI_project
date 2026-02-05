@@ -38,7 +38,7 @@ const MainLayout = ({ children }) => {
                 {children}
             </main>
             <footer className="bg-white border-t py-6 text-center text-gray-600 text-sm">
-                <p>© 2024 AWI Hábitos Saludables. Todos los derechos reservados.</p>
+                <p>© 2026 AWI Hábitos Saludables. Todos los derechos reservados.</p>
                 <p className="mt-1">Construyendo mejores hábitos, un día a la vez.</p>
             </footer>
         </div>

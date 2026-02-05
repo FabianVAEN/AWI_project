@@ -10,22 +10,32 @@ const Usuario = sequelize.define('Usuario', {
   username: {
     type: DataTypes.STRING,
     allowNull: false,
-    unique: true
+    unique: true,
+    validate: {
+      len: [3, 20]
+    }
   },
   primer_nombre: {
     type: DataTypes.STRING,
-    allowNull: false
+    allowNull: false,
+    validate: {
+      len: [1, 20]
+    }
   },
   segundo_nombre: {
     type: DataTypes.STRING,
-    allowNull: true
+    allowNull: true,
+    validate: {
+      len: [0, 20]
+    }
   },
   email: {
     type: DataTypes.STRING,
     unique: true,
     allowNull: false,
     validate: {
-      isEmail: true
+      isEmail: true,
+      len: [5, 30]
     }
   },
   password: {

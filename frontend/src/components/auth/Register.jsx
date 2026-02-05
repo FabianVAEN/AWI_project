@@ -83,13 +83,15 @@ export default function Register() {
                             name="primer_nombre"
                             value={formData.primer_nombre}
                             onChange={handleChange}
-                            required
+                            required                           
+                            maxLength={20}                        
                         />
-                        <Input
+                    <Input
                             label="Apellido"
                             name="segundo_nombre"
                             value={formData.segundo_nombre}
                             onChange={handleChange}
+                            maxLength={20}
                         />
                     </div>
 
@@ -98,9 +100,10 @@ export default function Register() {
                         name="username"
                         value={formData.username}
                         onChange={handleChange}
-                        required
+                        required                        
                         minLength={3}
-                    />
+                        maxLength={20}
+                        />
 
                     <Input
                         label="Email"
@@ -109,6 +112,7 @@ export default function Register() {
                         value={formData.email}
                         onChange={handleChange}
                         required
+                        maxLength={30}
                     />
 
                     <Input
@@ -119,6 +123,7 @@ export default function Register() {
                         onChange={handleChange}
                         required
                         minLength={6}
+                        maxLength={30}
                     />
 
                     <Input
@@ -128,6 +133,7 @@ export default function Register() {
                         value={formData.confirmPassword}
                         onChange={handleChange}
                         required
+                        maxLength={30}
                     />
 
                     <Button
