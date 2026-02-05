@@ -16,11 +16,17 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 
-// Rutas
 
-app.use('/api/usuarios', usuarioRoutes);
-app.use('/api/admin', adminRoutes);
-app.use('/api', habitRoutes);
+// Middleware de logging para depuración
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl}`);
+  next();
+});
+
+// Rutas
+app.use('/api', habitRoutes);     
+app.use('/api/usuarios', usuarioRoutes); 
+app.use('/api/admin', adminRoutes);       
 
 // Ruta de salud
 app.get('/api/health', (req, res) => {

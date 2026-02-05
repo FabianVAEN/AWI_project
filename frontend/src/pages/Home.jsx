@@ -33,6 +33,8 @@ export default function Home() {
                 HabitService.getUserHabits()
             ]);
 
+             console.log('📊 Lista de hábitos:', listaData); // ← AGREGAR ESTA LÍNEA
+
             setHabitos(habitosData);
             setListaHabitos(listaData);
         } catch (err) {
@@ -261,17 +263,26 @@ export default function Home() {
                         </div>
                     </div>
                 </div>
-                
+
                 {/* Crear hábito personalizado */}
-                <button
-                    onClick={() => setModalCrearAbierto(true)}
-                    className="fixed bottom-8 right-8 bg-gradient-to-r from-emerald-500 to-teal-500 text-white p-4 rounded-full shadow-2xl hover:shadow-emerald-500/50 hover:scale-110 transition-all duration-300 z-40"
-                    title="Crear Hábito Personalizado"
-                >
-                    <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                    </svg>
-                </button>
+                <div className="fixed bottom-8 right-8 z-50 group">
+                    {/* Tooltip */}
+                    <div className="absolute bottom-full right-0 mb-2 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                        Crear Hábito Rápido
+                        <div className="absolute top-full right-4 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-800"></div>
+                    </div>
+                    
+                    {/* Botón */}
+                    <button
+                        onClick={() => setModalCrearAbierto(true)}
+                        className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white p-4 rounded-full shadow-2xl hover:shadow-emerald-500/50 hover:scale-110 transition-all duration-300"
+                        aria-label="Crear Hábito Personalizado"
+                    >
+                        <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                        </svg>
+                    </button>
+                </div>
 
                 {/* Mi Lista de Hábitos */}
                 <div>
