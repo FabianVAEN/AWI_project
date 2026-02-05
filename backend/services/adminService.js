@@ -171,13 +171,43 @@ class AdminService {
             const totalCategorias = await Categoria.count();
             const totalSuscripciones = await UsuarioHabito.count();
 
+            // Ranking de rachas
+            const rankingRachas = await UsuarioHabito.findAll({
+                attributes: ['racha_actual'],
+                include: [
+                    { model: Habito, as: 'detalle_habito', attributes: ['nombre'] },
+                    { model: Usuario, as: 'usuario', attributes: ['username'] }
+                ],
+                order: [['racha_actual', 'DESC']],
+                limit: 5
+            });
+
+            // Hábitos más populares (por suscripciones)
+            const habitosPopulares = await Habito.findAll({
+                attributes: [
+                    'nombre',
+                    [Habito.sequelize.fn('COUNT', Habito.sequelize.col('suscripciones.id')), 'total_suscripciones']
+                ],
+                include: [{
+                    model: UsuarioHabito,
+                    as: 'suscripciones',
+                    attributes: []
+                }],
+                group: ['Habito.id', 'Habito.nombre'],
+                order: [[Habito.sequelize.fn('COUNT', Habito.sequelize.col('suscripciones.id')), 'DESC']],
+                limit: 5,
+                subQuery: false
+            });
+
             return {
                 totalUsuarios,
                 totalHabitos,
                 habitosPredeterminados,
                 habitosPersonalizados,
                 totalCategorias,
-                totalSuscripciones
+                totalSuscripciones,
+                rankingRachas,
+                habitosPopulares
             };
         } catch (error) {
             throw { status: 500, message: error.message };
