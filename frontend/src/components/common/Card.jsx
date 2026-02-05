@@ -9,6 +9,7 @@ import React from 'react';
  * - children: ReactNode
  * - variant: 'default' | 'success' | 'error' | 'warning' (default: 'default')
  * - className: string
+ * - onClick: function (opcional)
  */
 export default function Card({
   title,
@@ -16,18 +17,24 @@ export default function Card({
   children,
   variant = 'default',
   className = '',
+  onClick,
   ...props
 }) {
   const variantStyles = {
-    default: 'bg-black border-gray-300',
+    default: 'bg-white border-gray-300',
     success: 'bg-green-50 border-green-300',
     error: 'bg-red-50 border-red-300',
     warning: 'bg-yellow-50 border-yellow-300'
   };
 
+  const baseClasses = 'p-6 rounded-xl border-2 shadow-lg transition-all';
+  const variantClass = variantStyles[variant] || variantStyles.default;
+  const cursorClass = onClick ? 'cursor-pointer hover:shadow-xl' : '';
+
   return (
     <div
-      className={`p-6 rounded-xl border-2 shadow-lg transition-all ${variantStyles[variant]} ${className}`}
+      className={`${baseClasses} ${variantClass} ${cursorClass} ${className}`}
+      onClick={onClick}
       {...props}
     >
       {title && (
@@ -46,3 +53,4 @@ export default function Card({
     </div>
   );
 }
+

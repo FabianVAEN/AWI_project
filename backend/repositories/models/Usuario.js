@@ -40,10 +40,7 @@ const Usuario = sequelize.define('Usuario', {
   },
   password: {
     type: DataTypes.STRING,
-    allowNull: false,
-    validate: {
-      len: [6, 30]
-    }
+    allowNull: false
   },
   es_admin: { 
     type: DataTypes.BOOLEAN,

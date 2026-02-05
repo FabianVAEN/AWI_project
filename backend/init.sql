@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS usuarios (
     segundo_nombre VARCHAR(100),
     email VARCHAR(150) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
+    es_admin BOOLEAN DEFAULT FALSE, 
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -60,7 +61,8 @@ INSERT INTO categorias (nombre, descripcion, icono) VALUES
 ('Consumo Consciente', 'Hábitos para reducir residuos y mejorar la nutrición.', 'fa-leaf'),
 ('Energía Vital', 'Descanso y eficiencia energética.', 'fa-bolt'),
 ('Movimiento Verde', 'Actividad física y transporte sostenible.', 'fa-bicycle'),
-('Mente y Entorno', 'Bienestar mental y minimalismo.', 'fa-brain');
+('Mente y Entorno', 'Bienestar mental y minimalismo.', 'fa-brain'),
+('Personalizado', 'Hábitos creados por ti que no encajan en otras categorías.', 'fa-user-gear'); 
 
 INSERT INTO habitos (nombre, descripcion_breve, descripcion_larga, categoria_id) VALUES 
 ('Beber 8 vasos de agua', 'Mantén tu cuerpo hidratado y con energía.', 'Utiliza un termo reutilizable. Evitar botellas de plástico de un solo uso reduce la demanda de petróleo y evita que microplásticos entren en tu organismo y en los océanos.', 1),
@@ -70,7 +72,7 @@ INSERT INTO habitos (nombre, descripcion_breve, descripcion_larga, categoria_id)
 ('Desconectar dispositivos', 'Evita la luz azul una hora antes de dormir.', 'Eliminas el "consumo vampiro" (electricidad que gastan los equipos en stand-by) y permites que tu cerebro produzca melatonina de forma natural.', 2),
 ('Aprovechar luz natural', 'Realiza actividades cerca de ventanas.', 'La exposición moderada al sol activa la Vitamina D en tu piel. Al usar menos luz artificial, disminuyes la huella energética de tu hogar.', 2),
 ('Hacer ejercicio 30 min', 'Mantén tu corazón sano y activo.', 'Si te ejercitas al aire libre, conectas con la naturaleza (Biofilia), lo cual reduce el cortisol. No usar máquinas eléctricas de gimnasio ahorra energía.', 3),
-('Caminar 10,000 pasos', 'Mejora la circulación con movimiento constante.', 'Si usas tus piernas en lugar del auto para distancias cortas, eliminas emisiones de gases de efecto invernadero y mejoras tu capacidad aeróbica.', 3),
+('Caminar 10,000 pasos', 'Mejora la circulación con movimiento constante.', 'Si usas tus piernas en lugar del auto para distancias cortas, eliminas emisiones de gases de efecto invernadero y mejora tu capacidad aeróbica.', 3),
 ('Estiramientos matutinos', 'Despierta tus articulaciones.', 'Prevenir lesiones significa un cuerpo funcional que requiere menos intervenciones médicas y fármacos a largo plazo, reduciendo residuos químicos.', 3),
 ('Usar escaleras', 'Fortalece piernas y mejora resistencia.', 'Es ejercicio cardiovascular gratuito. Además, ahorras la electricidad necesaria para mover el motor del ascensor en cada piso.', 3),
 ('Meditar', 'Calma tu mente y reduce el estrés.', 'La paz mental combate el consumo compulsivo por ansiedad. Una persona equilibrada valora lo que ya tiene y compra de forma más responsable.', 4),
@@ -78,3 +80,11 @@ INSERT INTO habitos (nombre, descripcion_breve, descripcion_larga, categoria_id)
 ('Practicar gratitud', 'Escribe 3 cosas por las que agradeces.', 'La gratitud nos aleja de la cultura del "necesito más". Valorar lo esencial es el primer paso hacia un estilo de vida minimalista y sostenible.', 4),
 ('Digital Detox', 'Borra correos basura y archivos viejos.', 'El almacenamiento en la nube gasta mucha energía en servidores. Borrar "basura digital" ayuda a reducir la huella de carbono de los centros de datos.', 4),
 ('Baño de 5 minutos', 'Higiene personal optimizando el agua.', 'Una ducha corta ahorra hasta 40 litros de agua. También reduces el consumo de gas o electricidad necesarios para calentar el agua.', 1);
+
+-- ✅ HASH CORRECTO para 'admin123' (bcrypt, 10 rounds)
+INSERT INTO usuarios (username, primer_nombre, segundo_nombre, email, password, es_admin) 
+VALUES (
+    'admin_awi', 'Admin', 'Principal', 'admin@awi.com', 
+    '$2a$10$N9qo8uLOickgx2ZMRZoMye3Z7pONQyQrQZWjR5Jqtscg7W2JQ5YqK', 
+    TRUE
+);

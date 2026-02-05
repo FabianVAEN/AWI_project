@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Input, Card } from '../components/common';
+import { Card, Button, LoadingScreen, HabitForm, Modal } from '../components/common';
 import HabitService from '../services/habitService';
 
 export default function Home() {
@@ -7,11 +7,13 @@ export default function Home() {
     const [habitos, setHabitos] = useState([]);
     const [listaHabitos, setListaHabitos] = useState([]);
     const [error, setError] = useState('');
-    const [showCreateForm, setShowCreateForm] = useState(false);
-    const [formData, setFormData] = useState({ nombre: '', descripcion: '' });
+    const [modalCrearAbierto, setModalCrearAbierto] = useState(false); 
+    const [modalEditarAbierto, setModalEditarAbierto] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [editando, setEditando] = useState(null);
-    const [categoriaActiva, setCategoriaActiva] = useState('all');
+    const [habitoAEditar, setHabitoAEditar] = useState(null);
+    const [categoriaActiva, setCategoriaActiva] = useState('Todas');
+    const [expandedCatalog, setExpandedCatalog] = useState({});
+    const [expandedLista, setExpandedLista] = useState({});
 
     useEffect(() => {
         // Pantalla de carga por 2 segundos
@@ -49,19 +51,12 @@ export default function Home() {
         }
     };
 
-    const crearHabitoPersonalizado = async (e) => {
-        e.preventDefault();
-        if (!formData.nombre.trim()) {
-            setError('El nombre del hábito es obligatorio');
-            return;
-        }
-
+    const crearHabitoPersonalizado = async (formData) => {
         try {
             setIsSubmitting(true);
             setError('');
             await HabitService.createCustomHabit(formData);
-            setFormData({ nombre: '', descripcion: '' });
-            setShowCreateForm(false);
+            setModalCrearAbierto(false);
             await cargarDatos();
         } catch (err) {
             setError(err.message);
@@ -70,28 +65,33 @@ export default function Home() {
         }
     };
 
-    const editarHabito = async (e) => {
-        e.preventDefault();
+    const editarHabito = async (formData) => {
         try {
             setError('');
-            await HabitService.updateHabit(editando.id, {
-            nombre: editando.nombre,
-            descripcion: editando.descripcion
-            });
-            setEditando(null);
+            await HabitService.updateHabit(habitoAEditar.id, formData);
+            setModalEditarAbierto(false);
+            setHabitoAEditar(null);
             await cargarDatos();
         } catch (err) {
             setError('Error al editar hábito');
         }
-        };
+    };
 
-    const cambiarEstado = async (id, nuevoEstado) => {
+    const marcarCompletado = async (id) => {
         try {
             setError('');
-            await HabitService.updateHabit(id, { estado: nuevoEstado });
-            await cargarDatos();
+            // Obtener el hábito actual
+            const habitoActual = listaHabitos.find(h => h.id === id);
+            if (!habitoActual) return;
+
+            // Alternar estado
+            const nuevoEstado = habitoActual.estado === 'completado' ? 'pendiente' : 'completado';
+
+            await HabitService.toggleHabitStatus(id, nuevoEstado);
+            await cargarDatos(); // Esto recarga los datos
         } catch (err) {
-            setError('Error al actualizar estado');
+            setError('Error al cambiar estado del hábito');
+            console.error(err);
         }
     };
 
@@ -108,40 +108,29 @@ export default function Home() {
     };
 
     if (loading) {
-        return (
-            <div className="min-h-screen bg-gradient-to-br from-emerald-400 via-teal-500 to-cyan-600 flex items-center justify-center">
-                <div className="text-center">
-                    <h1 className="text-8xl font-bold text-white mb-4 animate-pulse">AWI</h1>
-                    <div className="flex justify-center gap-2">
-                        <div className="w-3 h-3 bg-white rounded-full animate-bounce"></div>
-                        <div className="w-3 h-3 bg-white rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                        <div className="w-3 h-3 bg-white rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                    </div>
-                </div>
-            </div>
-        );
+        return <LoadingScreen title="AWI" variant="splash" />;
     }
 
     const habitosYaAgregados = listaHabitos
         .filter(h => h.habito_id !== null)
         .map(h => h.habito_id);
 
-    const categorias = Array.from(
-        new Map(
-            habitos
-                .filter(h => h.categoria)
-                .map(h => [h.categoria.id, h.categoria])
-        ).values()
-    );
+    const categorias = ['Todas', ...Array.from(new Set(
+        habitos.map(h => (h.categoria?.nombre || 'Sin Categoría'))
+    ))];
 
-    const habitosFiltrados = categoriaActiva === 'all'
+    const habitosFiltrados = categoriaActiva === 'Todas'
         ? habitos
-        : habitos.filter(h => h.categoria && h.categoria.id === categoriaActiva);
+        : habitos.filter(h => (h.categoria?.nombre || 'Sin Categoría') === categoriaActiva);
 
-    const limitarTexto = (texto, max = 120) => {
-        if (!texto) return '';
-        return texto.length > max ? `${texto.slice(0, max).trim()}...` : texto;
+    const toggleCatalogDescripcion = (id) => {
+        setExpandedCatalog(prev => ({ ...prev, [id]: !prev[id] }));
     };
+
+    const toggleListaDescripcion = (id) => {
+        setExpandedLista(prev => ({ ...prev, [id]: !prev[id] }));
+    };
+
     return (
         <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 py-8 px-4">
             <div className="max-w-7xl mx-auto">
@@ -166,237 +155,261 @@ export default function Home() {
                     <h2 className="text-2xl font-semibold text-gray-800 mb-6 text-center">
                         Hábitos Disponibles
                     </h2>
-                    {categorias.length > 0 && (
+                    {/* Filtros de categoría */}
+                    {categorias.length > 1 && (
                         <div className="flex flex-wrap justify-center gap-2 mb-6">
-                            <button
-                                type="button"
-                                onClick={() => setCategoriaActiva('all')}
-                                className={`px-4 py-2 rounded-full text-sm font-semibold transition-all border ${categoriaActiva === 'all'
-                                    ? 'bg-emerald-600 text-white border-emerald-600 shadow'
-                                    : 'bg-white text-emerald-700 border-emerald-200 hover:bg-emerald-50'
-                                    }`}
-                            >
-                                Todas
-                            </button>
                             {categorias.map((categoria) => (
                                 <button
-                                    key={categoria.id}
+                                    key={categoria}
                                     type="button"
-                                    onClick={() => setCategoriaActiva(categoria.id)}
-                                    className={`px-4 py-2 rounded-full text-sm font-semibold transition-all border ${categoriaActiva === categoria.id
-                                        ? 'bg-emerald-600 text-white border-emerald-600 shadow'
-                                        : 'bg-white text-emerald-700 border-emerald-200 hover:bg-emerald-50'
+                                    onClick={() => setCategoriaActiva(categoria)}
+                                    className={`px-4 py-2 rounded-full text-sm font-semibold transition-all ${categoriaActiva === categoria
+                                        ? 'bg-emerald-600 text-white shadow-md'
+                                        : 'bg-white text-emerald-700 border border-emerald-200 hover:bg-emerald-50'
                                         }`}
                                 >
-                                    {categoria.nombre}
+                                    {categoria}
                                 </button>
                             ))}
                         </div>
                     )}
-                
                     {habitos.length === 0 ? (
                         <Card variant="warning" className="text-center">
                             <p className="text-gray-600">No hay hábitos disponibles en el catálogo</p>
                         </Card>
                     ) : (
-                        <div className="habitos-scroll overflow-x-auto pb-3">
-                            <div className="flex gap-4 min-w-max px-2">
+                        <div className="overflow-x-auto pb-4">
+                            <div className="flex gap-4 min-w-max px-4">
                                 {habitosFiltrados.map((habito) => {
-                                        const yaAgregado = habitosYaAgregados.includes(habito.id);
-                                        const descripcionBreve = habito.descripcion_breve || habito.descripcion;
-                                        return (
-                                            <button
-                                                key={habito.id}
-                                                onClick={() => !yaAgregado && agregarHabito(habito.id)}
-                                                disabled={yaAgregado}
-                                                className={`w-64 flex-shrink-0 p-6 rounded-xl shadow-lg transition-all transform hover:scale-105 ${yaAgregado
-                                                    ? 'bg-gray-300 cursor-not-allowed opacity-60'
-                                                    : 'bg-gradient-to-br from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 cursor-pointer'
-                                                    }`}
-                                            >
-                                                {habito.categoria?.nombre && (
-                                                    <span className="inline-block mb-3 px-3 py-1 bg-white text-black-700 text-xs rounded-full">
-                                                        {habito.categoria.nombre}
-                                                    </span>
-                                                )}
-                                                <h3 className="text-black font-bold text-lg mb-2">
-                                                    {habito.nombre}
-                                                </h3>
-                                                <p className="text-black text-sm opacity-90">
-                                                    {limitarTexto(descripcionBreve, 90)}
-                                                </p>
-                                                {yaAgregado && (
-                                                    <span className="inline-block mt-3 px-3 py-1 bg-white text-black-700 text-xs rounded-full">
-                                                        ??? Agregado
-                                                    </span>
-                                                )}
-                                            </button>
-                                        );
-                                    })}
+                                    const yaAgregado = habitosYaAgregados.includes(habito.id);
+                                    const expanded = !!expandedCatalog[habito.id];
+                                    return (
+                                        <div
+                                            key={habito.id}
+                                            className={`flex-shrink-0 w-64 p-6 rounded-xl shadow-lg transition-all transform hover:scale-105 ${yaAgregado
+                                                ? 'bg-gray-300 cursor-not-allowed opacity-60'
+                                                : 'bg-gradient-to-br from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600'
+                                                }`}
+                                        >
+                                            <h3 className="text-white font-bold text-lg mb-2">
+                                                {habito.nombre}
+                                            </h3>
+                                            <p className="text-white text-sm opacity-90">
+                                                {habito.descripcion_breve}
+                                            </p>
+                                            {habito.descripcion_larga && (
+                                                <div className="mt-3">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => toggleCatalogDescripcion(habito.id)}
+                                                        className="text-white text-sm underline underline-offset-2"
+                                                    >
+                                                        {expanded ? 'Ver menos' : 'Ver más'}
+                                                    </button>
+                                                    {expanded && (
+                                                        <p className="text-white text-lg opacity-90 mt-2">
+                                                            {habito.descripcion_larga}
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            )}
+                                            {yaAgregado && (
+                                                <span className="inline-block mt-3 px-3 py-1 bg-white text-gray-700 text-xs rounded-full">
+                                                    ✓ Agregado
+                                                </span>
+                                            )}
+                                            <div className="mt-4">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => !yaAgregado && agregarHabito(habito.id)}
+                                                    disabled={yaAgregado}
+                                                    className={`w-full px-4 py-2 rounded-lg text-sm font-semibold transition-all ${yaAgregado
+                                                        ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                                                        : 'bg-white text-emerald-700 hover:bg-emerald-50'
+                                                        }`}
+                                                >
+                                                    {yaAgregado ? 'Agregado' : 'Agregar'}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
                             </div>
                         </div>
                     )}
                 </div>
-                {/* Crear hábito personalizado */}
+
+                {/* Botón destacado para crear hábito personalizado */}
                 <div className="mb-12">
-                    <div className="text-center mb-6">
-                        <Button
-                            variant={showCreateForm ? 'secondary' : 'primary'}
-                            onClick={() => setShowCreateForm(!showCreateForm)}
-                        >
-                            {showCreateForm ? 'Cancelar' : '+ Crear Hábito Personalizado'}
-                        </Button>
-                    </div>
-
-                    {showCreateForm && (
-                        <Card className="max-w-2xl mx-auto">
-                            <form onSubmit={crearHabitoPersonalizado} className="space-y-4">
-                                <Input
-                                    label="Nombre del Hábito"
-                                    placeholder="Ej: Meditar 20 minutos"
-                                    value={formData.nombre}
-                                    onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
-                                    required
-                                />
-                                <Input
-                                    label="Descripción"
-                                    placeholder="Ej: Práctica diaria de meditación"
-                                    type="textarea"
-                                    value={formData.descripcion}
-                                    onChange={(e) => setFormData({ ...formData, descripcion: e.target.value })}
-                                />
-                                <div className="flex gap-3 justify-end">
-                                    <Button
-                                        variant="secondary"
-                                        onClick={() => {
-                                            setShowCreateForm(false);
-                                            setFormData({ nombre: '', descripcion: '' });
-                                        }}
-                                    >
-                                        Cancelar
-                                    </Button>
-                                    <Button
-                                        variant="success"
-                                        type="submit"
-                                        isLoading={isSubmitting}
-                                    >
-                                        Crear Hábito
-                                    </Button>
-                                </div>
-                            </form>
-                        </Card>
-                    )}
-                </div>
-
-                 {editando && (
-                <Card className="max-w-2xl mx-auto mb-6">
-                    <h3 className="text-xl font-bold mb-4">Editar Hábito</h3>
-                    <form onSubmit={editarHabito} className="space-y-4">
-                    <Input
-                        label="Nombre"
-                        value={editando.nombre}
-                        onChange={(e) => setEditando({...editando, nombre: e.target.value})}
-                        required
-                    />
-                    <Input
-                        label="Descripción"
-                        type="textarea"
-                        value={editando.descripcion}
-                        onChange={(e) => setEditando({...editando, descripcion: e.target.value})}
-                    />
-                    <div className="flex gap-3 justify-end">
-                        <Button variant="secondary" onClick={() => setEditando(null)}>
-                        Cancelar
-                        </Button>
-                        <Button variant="success" type="submit">
-                        Guardar Cambios
-                        </Button>
-                    </div>
-                    </form>
-                </Card>
-)}
-
-                {/* Lista de hábitos del usuario */}
-                <div className="bg-white rounded-2xl shadow-xl p-8">
-                    <h2 className="text-2xl font-semibold text-gray-800 mb-6">
-                        Mi Lista de Hábitos ({listaHabitos.length})
-                    </h2>
-
-                    {listaHabitos.length === 0 ? (
-                        <div className="text-center py-12">
-                            <p className="text-gray-400 text-lg">
-                                Tu lista está vacía. Agrega hábitos desde arriba para comenzar.
+                    <div className="max-w-2xl mx-auto bg-gradient-to-r from-emerald-500 to-teal-500 rounded-2xl p-8 shadow-xl">
+                        <div className="text-center text-white">
+                            <h3 className="text-2xl font-bold mb-3">
+                                ¿No encuentras el hábito perfecto?
+                            </h3>
+                            <p className="mb-6 text-emerald-50">
+                                Crea tu propio hábito personalizado y adáptalo a tus necesidades
                             </p>
+                            <button
+                                onClick={() => setModalCrearAbierto(true)}
+                                className="bg-white text-emerald-600 font-bold px-8 py-3 rounded-full hover:bg-emerald-50 transform hover:scale-105 transition-all duration-300 shadow-lg inline-flex items-center gap-2"
+                            >
+                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                </svg>
+                                Crear Mi Hábito Personalizado
+                            </button>
                         </div>
+                    </div>
+                </div>
+                
+                {/* Crear hábito personalizado */}
+                <button
+                    onClick={() => setModalCrearAbierto(true)}
+                    className="fixed bottom-8 right-8 bg-gradient-to-r from-emerald-500 to-teal-500 text-white p-4 rounded-full shadow-2xl hover:shadow-emerald-500/50 hover:scale-110 transition-all duration-300 z-40"
+                    title="Crear Hábito Personalizado"
+                >
+                    <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
+                </button>
+
+                {/* Mi Lista de Hábitos */}
+                <div>
+                    <h2 className="text-2xl font-semibold text-gray-800 mb-6 text-center">
+                        Mi Lista de Hábitos
+                    </h2>
+                    {listaHabitos.length === 0 ? (
+                        <Card className="text-center">
+                            <p className="text-gray-600">Aún no has agregado hábitos. ¡Comienza ahora!</p>
+                        </Card>
                     ) : (
-                        <div className="space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {listaHabitos.map((habito) => (
-                                <div
-                                    key={habito.id}
-                                    className={`p-5 rounded-lg border-2 transition-all ${habito.estado === 'hecho'
-                                        ? 'bg-green-50 border-green-300'
-                                        : 'bg-gray-50 border-gray-300'
-                                        }`}
-                                >
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex-1">
-                                            <h3
-                                                className={`text-lg font-semibold ${habito.estado === 'hecho' ? 'line-through text-gray-500' : 'text-gray-800'
-                                                    }`}
-                                            >
+                                <Card key={habito.id} className="flex flex-col">
+                                    <div className="flex-1">
+                                        {/* Estado del hábito - NUEVO */}
+                                        <div className="flex justify-between items-start mb-2">
+                                            <h3 className="text-lg font-semibold text-gray-800">
                                                 {habito.nombre}
                                             </h3>
-                                            <p className="text-sm text-gray-600 mt-1">
-                                                {habito.descripcion}
-                                            </p>
-                                        </div>
-
-                                        <div className="flex items-center gap-3">
-                                            <Button
-                                                size="sm"
-                                                variant={habito.estado === 'hecho' ? 'secondary' : 'success'}
-                                                onClick={() =>
-                                                    cambiarEstado(
-                                                        habito.id,
-                                                        habito.estado === 'por hacer' ? 'hecho' : 'por hacer'
-                                                    )
-                                                }
-                                            >
-                                                {habito.estado === 'hecho' ? 'Desmarcar' : 'Completar'}
-                                            </Button>
-
-                                            <Button
-                                                size="sm"
-                                                variant="danger"
-                                                onClick={() => eliminarHabito(habito.id)}
-                                            >
-                                                Eliminar
-                                            </Button>
-
-                                            <Button
-                                                size="sm"
-                                                variant="ghost"
-                                                disabled={habito.es_predeterminado}
-                                                onClick={() => !habito.es_predeterminado && setEditando(habito)}
-                                                >
-                                                    {habito.es_predeterminado ? ' (Predeterminado)' : 'Editar'}
-                                                </Button>
-
-                                            <span
-                                                className={`px-4 py-2 rounded-full text-sm font-medium ${habito.estado === 'hecho'
-                                                    ? 'bg-green-100 text-green-800'
-                                                    : 'bg-orange-100 text-orange-800'
-                                                    }`}
-                                            >
-                                                {habito.estado === 'hecho' ? '✓ Hecho' : '○ Por hacer'}
+                                            <span className={`px-2 py-1 rounded text-xs font-medium ${habito.estado === 'completado'
+                                                ? 'bg-green-100 text-green-800 border border-green-200'
+                                                : 'bg-yellow-100 text-yellow-800 border border-yellow-200'}`}>
+                                                {habito.estado === 'completado' ? '✓ Completado' : '⏳ Pendiente'}
                                             </span>
                                         </div>
+
+                                        {/* Descripción breve - NUEVO */}
+                                        <p className="text-gray-600 text-sm mb-2">
+                                            {habito.descripcion_breve || habito.descripcion}
+                                        </p>
+                                        {habito.descripcion_larga && (
+                                            <div className="mb-2">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => toggleListaDescripcion(habito.id)}
+                                                    className="text-emerald-700 text-xs underline underline-offset-2"
+                                                >
+                                                    {expandedLista[habito.id] ? 'Ver menos' : 'Ver más'}
+                                                </button>
+                                                {expandedLista[habito.id] && (
+                                                    <p className="text-gray-600 text-lg mt-2">
+                                                        {habito.descripcion_larga}
+                                                    </p>
+                                                )}
+                                            </div>
+                                        )}
+                                        {/* Racha */}
+                                        
+                                        {habito.racha_actual > 0 && (
+                                            <div className="mb-4 p-2 bg-emerald-50 rounded-lg">
+                                                <p className="text-sm text-emerald-700">
+                                                    🔥 Racha: {habito.racha_actual} días
+                                                </p>
+                                            </div>
+                                        )}
                                     </div>
-                                </div>
+
+                                    {/* Botones - MODIFICADO */}
+                                    <div className="flex gap-2 pt-4 border-t">
+                                        <Button
+                                            variant={habito.estado === 'completado' ? 'secondary' : 'success'}
+                                            size="sm"
+                                            onClick={() => marcarCompletado(habito.id)}
+                                            className="flex-1"
+                                        >
+                                            {habito.estado === 'completado' ? '↶ Pendiente' : '✓ Completar'}
+                                        </Button>
+                                        <Button
+                                            variant="secondary"
+                                            size="sm"
+                                            onClick={() => {
+                                                if (!habito.es_predeterminado) {
+                                                    setHabitoAEditar(habito);
+                                                    setModalEditarAbierto(true);
+                                                }
+                                            }}
+                                            className="flex-1"
+                                            disabled={habito.es_predeterminado}
+                                        >
+                                            {habito.es_predeterminado ? 'No editable' : 'Editar'}
+                                        </Button>
+                                        <Button
+                                            variant="danger"
+                                            size="sm"
+                                            onClick={() => eliminarHabito(habito.id)}
+                                            className="flex-1"
+                                        >
+                                            Eliminar
+                                        </Button>
+                                    </div>
+                                </Card>
                             ))}
                         </div>
                     )}
                 </div>
+                {/* Modal para crear hábito */}
+                <Modal
+                    isOpen={modalCrearAbierto}
+                    onClose={() => setModalCrearAbierto(false)}
+                    title="Crear Hábito Personalizado"
+                >
+                    <HabitForm
+                        mode="create"
+                        initialData={{ nombre: '', descripcion: '' }}
+                        onSubmit={crearHabitoPersonalizado}
+                        onCancel={() => setModalCrearAbierto(false)}
+                        isSubmitting={isSubmitting}
+                        showCategory={true}
+                    />
+                </Modal>
+
+                {/* Modal para editar hábito */}
+                <Modal
+                    isOpen={modalEditarAbierto}
+                    onClose={() => {
+                        setModalEditarAbierto(false);
+                        setHabitoAEditar(null);
+                    }}
+                    title="Editar Hábito"
+                >
+                    {habitoAEditar && (
+                        <HabitForm
+                            mode="edit"
+                            initialData={{
+                                nombre: habitoAEditar.nombre,
+                                descripcion: habitoAEditar.descripcion_breve || habitoAEditar.descripcion
+                            }}
+                            onSubmit={editarHabito}
+                            onCancel={() => {
+                                setModalEditarAbierto(false);
+                                setHabitoAEditar(null);
+                            }}
+                            isSubmitting={isSubmitting}
+                            showCategory={false}
+                        />
+                    )}
+                </Modal>
             </div>
         </div>
     );
