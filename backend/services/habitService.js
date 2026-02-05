@@ -61,7 +61,90 @@ class HabitService {
 
     // --- NUEVOS MÉTODOS DE ESTADÍSTICAS ---
     async getUserStats(usuario_id) {
-        return await HabitRepository.getUserStats(usuario_id);
+        try {
+            console.log('📈 Calculando estadísticas para usuario:', usuario_id);
+
+            // 1. Obtener todos los hábitos del usuario
+            const userHabits = await UsuarioHabito.findAll({
+                where: { usuario_id },
+                include: [
+                    {
+                        model: Habito,
+                        as: 'detalle_habito'
+                    },
+                    {
+                        model: Seguimiento,
+                        as: 'registros',
+                        required: false
+                    }
+                ]
+            });
+
+            // 2. Calcular métricas básicas
+            const totalHabitos = userHabits.length;
+
+            // Rachas
+            let rachaPromedio = 0;
+            let mejorRacha = 0;
+            let sumaRachas = 0;
+            let habitosConRacha = 0;
+
+            userHabits.forEach(habit => {
+                if (habit.racha_actual > 0) {
+                    sumaRachas += habit.racha_actual;
+                    habitosConRacha++;
+                }
+                if (habit.racha_maxima > mejorRacha) {
+                    mejorRacha = habit.racha_maxima;
+                }
+            });
+
+            rachaPromedio = habitosConRacha > 0 ? Math.round(sumaRachas / habitosConRacha) : 0;
+
+            // 3. Historial de últimos 7 días
+            const historial = [];
+            const hoy = new Date();
+
+            for (let i = 6; i >= 0; i--) {
+                const fecha = new Date(hoy);
+                fecha.setDate(hoy.getDate() - i);
+                const fechaStr = fecha.toISOString().split('T')[0];
+
+                let completados = 0;
+
+                // Para cada hábito, verificar si fue completado en esta fecha
+                for (const habit of userHabits) {
+                    const registro = habit.registros?.find(r => {
+                        const registroFecha = new Date(r.fecha).toISOString().split('T')[0];
+                        return registroFecha === fechaStr && r.estado === 'completado';
+                    });
+
+                    if (registro) {
+                        completados++;
+                    }
+                }
+
+                historial.push({
+                    fecha: fechaStr,
+                    completados
+                });
+            }
+
+            // 4. Retornar estadísticas
+            return {
+                totalHabitos,
+                rachaPromedio,
+                mejorRacha,
+                historial,
+                resumen: {
+                    habitosActivos: totalHabitos,
+                    consistencia: rachaPromedio > 7 ? 'Alta' : rachaPromedio > 3 ? 'Media' : 'Baja'
+                }
+            };
+        } catch (error) {
+            console.error('Error en getUserStats:', error);
+            throw { status: 500, message: "Error al calcular estadísticas: " + error.message };
+        }
     }
 
     async getAdminStats() {
