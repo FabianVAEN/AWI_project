@@ -1,6 +1,6 @@
 import AuthService from './authService';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 class HabitService {
   static async _fetchWithAuth(endpoint, options = {}) {
@@ -71,6 +71,10 @@ class HabitService {
     return this._fetchWithAuth(`/lista-habitos/${id}`, {
       method: 'DELETE'
     });
+  }
+
+  static async getUserStats() {
+    return this._fetchWithAuth('/estadisticas');
   }
 
 }

@@ -47,167 +47,108 @@ class HabitService {
     }
 
     async updateHabit(id, data, usuario_id) {
-        try {
-            console.log('🔄 [updateHabit] INICIANDO...');
-            console.log('📥 Parámetros recibidos:', { id, data, usuario_id });
-            
-            // 1. Buscar la SUSCRIPCIÓN del usuario (UsuarioHabito)
-            console.log('🔍 Buscando suscripción con ID:', id, 'y usuario_id:', usuario_id);
-            const suscripcion = await UsuarioHabito.findOne({
-                where: { id, usuario_id }
-            });
-            
-            if (!suscripcion) {
-                console.log('❌ Suscripción NO encontrada');
-                throw { status: 404, message: "Hábito no encontrado en tu lista" };
-            }
-
-            console.log('✅ Suscripción encontrada:', suscripcion.toJSON());
-
-            // 2. Buscar el HÁBITO asociado
-            console.log('🔍 Buscando hábito con ID:', suscripcion.habito_id);
-            const habito = await Habito.findByPk(suscripcion.habito_id);
-            
-            if (!habito) {
-                console.log('❌ Hábito NO encontrado');
-                throw { status: 404, message: "Hábito no encontrado" };
-            }
-
-            console.log('✅ Hábito encontrado:', habito.toJSON());
-
-            // 3. Verificar que sea personalizado (no predeterminado)
-            console.log('🔍 Verificando si es personalizado. es_predeterminado:', habito.es_predeterminado);
-            if (habito.es_predeterminado) {
-                console.log('❌ Intento de editar hábito predeterminado');
-                throw { status: 403, message: "No puedes editar hábitos predeterminados" };
-            }
-
-            // 4. Verificar que el usuario sea el creador del hábito personalizado
-            console.log('🔍 Verificando propiedad. Habito.usuario_id:', habito.usuario_id, 'Usuario actual:', usuario_id);
-            if (habito.usuario_id !== usuario_id) {
-                console.log('❌ Usuario no es el creador');
-                throw { status: 403, message: "No tienes permisos para editar este hábito" };
-            }
-
-            // 5. Actualizar el hábito
-            const updateData = {};
-            if (data.nombre && data.nombre.trim()) {
-                updateData.nombre = data.nombre.trim();
-                console.log('📝 Nuevo nombre:', updateData.nombre);
-            }
-            if (data.descripcion !== undefined) {
-                updateData.descripcion_breve = data.descripcion.trim();
-                console.log('📝 Nueva descripción:', updateData.descripcion_breve);
-            }
-            
-            if (Object.keys(updateData).length === 0) {
-                console.log('⚠️ No hay datos para actualizar');
-                throw { status: 400, message: "No hay datos para actualizar" };
-            }
-
-            console.log('💾 Actualizando hábito en la base de datos...');
-            await habito.update(updateData);
-
-            // 6. Retornar datos actualizados
-            const respuesta = {
-                id: suscripcion.id,
-                habito_id: habito.id,
-                nombre: habito.nombre,
-                descripcion_breve: habito.descripcion_breve,
-                estado: 'pendiente',
-                racha_actual: suscripcion.racha_actual || 0
-            };
-
-            console.log('✅ [updateHabit] COMPLETADO con éxito:', respuesta);
-            return respuesta;
-        } catch (error) {
-            console.error('💥 [updateHabit] ERROR COMPLETO:', error);
-            // Si ya tiene status, re-lanzar
-            if (error.status) {
-                console.error(`📊 Error con status ${error.status}: ${error.message}`);
-                throw error;
-            }
-            // Si no, error genérico
-            console.error('📊 Error interno del servidor');
-            throw { status: 500, message: error.message || "Error interno al actualizar hábito" };
-        }
+        return await HabitRepository.update(id, data, usuario_id);
     }
 
     async toggleHabitStatus(id, estado, usuario_id) {
-        const numericId = parseInt(id);
-        if (isNaN(numericId)) {
-            throw { status: 400, message: "El ID debe ser un número" };
-        }
-
-        const suscripcion = await UsuarioHabito.findOne({
-            where: { id: numericId, usuario_id }
-        });
-        
-        if (!suscripcion) {
-            throw { status: 404, message: "Hábito no encontrado en tu lista" };
-        }
-
-        if (!['pendiente', 'completado'].includes(estado)) {
-            throw { status: 400, message: "Estado inválido. Use 'pendiente' o 'completado'" };
-        }
-
-        const hoy = new Date().toISOString().split('T')[0];
-        const [seguimiento, created] = await Seguimiento.findOrCreate({
-            where: {
-                usuario_habito_id: numericId,
-                fecha: hoy
-            },
-            defaults: { estado }
-        });
-
-        if (!created) {
-            await seguimiento.update({ estado });
-        }
-
-        if (estado === 'completado') {
-            const nuevaRacha = (suscripcion.racha_actual || 0) + 1;
-            const rachaMaxima = Math.max(suscripcion.racha_maxima || 0, nuevaRacha);
-
-            await suscripcion.update({
-                racha_actual: nuevaRacha,
-                racha_maxima: rachaMaxima
-            });
-        } else if (estado === 'pendiente') {
-            const nuevaRacha = Math.max(0, (suscripcion.racha_actual || 0) - 1);
-            await suscripcion.update({ racha_actual: nuevaRacha });
-        }
-
-        return {
-            id: suscripcion.id,
-            estado: estado,
-            racha_actual: suscripcion.racha_actual
-        };
+        // Usamos la nueva lógica de racha real
+        return await HabitRepository.toggleComplete(usuario_id, id);
     }
 
     async deleteHabit(id, usuario_id) {
-        const numericId = parseInt(id);
-        if (isNaN(numericId)) {
-            throw { status: 400, message: "El ID debe ser un número" };
-        }
+        return await HabitRepository.delete(id, usuario_id);
+    }
 
-        const suscripcion = await UsuarioHabito.findOne({
-            where: { id: numericId, usuario_id }
-        });
-        
-        if (!suscripcion) {
-            throw { status: 404, message: "Hábito no encontrado" };
-        }
+    // --- NUEVOS MÉTODOS DE ESTADÍSTICAS ---
+    async getUserStats(usuario_id) {
+        try {
+            console.log('📈 Calculando estadísticas para usuario:', usuario_id);
 
-        // Si es hábito personalizado, también eliminar el hábito
-        const habito = await Habito.findByPk(suscripcion.habito_id);
-        if (habito && !habito.es_predeterminado && habito.usuario_id === usuario_id) {
-            await habito.destroy();
-        } else {
-            // Solo eliminar la suscripción
-            await suscripcion.destroy();
-        }
+            // 1. Obtener todos los hábitos del usuario
+            const userHabits = await UsuarioHabito.findAll({
+                where: { usuario_id },
+                include: [
+                    {
+                        model: Habito,
+                        as: 'detalle_habito'
+                    },
+                    {
+                        model: Seguimiento,
+                        as: 'registros',
+                        required: false
+                    }
+                ]
+            });
 
-        return { message: "Hábito eliminado correctamente" };
+            // 2. Calcular métricas básicas
+            const totalHabitos = userHabits.length;
+
+            // Rachas
+            let rachaPromedio = 0;
+            let mejorRacha = 0;
+            let sumaRachas = 0;
+            let habitosConRacha = 0;
+
+            userHabits.forEach(habit => {
+                if (habit.racha_actual > 0) {
+                    sumaRachas += habit.racha_actual;
+                    habitosConRacha++;
+                }
+                if (habit.racha_maxima > mejorRacha) {
+                    mejorRacha = habit.racha_maxima;
+                }
+            });
+
+            rachaPromedio = habitosConRacha > 0 ? Math.round(sumaRachas / habitosConRacha) : 0;
+
+            // 3. Historial de últimos 7 días
+            const historial = [];
+            const hoy = new Date();
+
+            for (let i = 6; i >= 0; i--) {
+                const fecha = new Date(hoy);
+                fecha.setDate(hoy.getDate() - i);
+                const fechaStr = fecha.toISOString().split('T')[0];
+
+                let completados = 0;
+
+                // Para cada hábito, verificar si fue completado en esta fecha
+                for (const habit of userHabits) {
+                    const registro = habit.registros?.find(r => {
+                        const registroFecha = new Date(r.fecha).toISOString().split('T')[0];
+                        return registroFecha === fechaStr && r.estado === 'completado';
+                    });
+
+                    if (registro) {
+                        completados++;
+                    }
+                }
+
+                historial.push({
+                    fecha: fechaStr,
+                    completados
+                });
+            }
+
+            // 4. Retornar estadísticas
+            return {
+                totalHabitos,
+                rachaPromedio,
+                mejorRacha,
+                historial,
+                resumen: {
+                    habitosActivos: totalHabitos,
+                    consistencia: rachaPromedio > 7 ? 'Alta' : rachaPromedio > 3 ? 'Media' : 'Baja'
+                }
+            };
+        } catch (error) {
+            console.error('Error en getUserStats:', error);
+            throw { status: 500, message: "Error al calcular estadísticas: " + error.message };
+        }
+    }
+
+    async getAdminStats() {
+        return await HabitRepository.adminGetGlobalStats();
     }
 }
 

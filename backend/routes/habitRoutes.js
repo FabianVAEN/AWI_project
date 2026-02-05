@@ -73,4 +73,14 @@ router.delete('/lista-habitos/:id', authMiddleware, async (req, res) => {
     }
 });
 
+// Obtener estadísticas del usuario
+router.get('/estadisticas', authMiddleware, async (req, res) => {
+    try {
+        const result = await HabitService.getUserStats(req.userId);
+        res.json(result);
+    } catch (error) {
+        res.status(error.status || 500).json({ error: error.message });
+    }
+});
+
 module.exports = router;
