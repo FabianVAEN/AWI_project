@@ -5,11 +5,11 @@ const seed = async () => {
     try {
         await sequelize.authenticate();
         console.log('✅ Conexión a BD exitosa');
-        
+
         // ⚠️ CUIDADO: Esto ELIMINA TODOS LOS DATOS
         console.log('⚠️  Limpiando base de datos...');
         await sequelize.sync({ force: true });
-        
+
         console.log('🚀 Iniciando Seeder de Usuarios con Rachas...');
 
         const salt = await bcrypt.genSalt(10);
@@ -41,9 +41,58 @@ const seed = async () => {
                 categoria_id: categorias[0].id
             },
             {
+                nombre: 'Lunes sin carne',
+                descripcion_breve: 'Reduce el consumo de proteína animal.',
+                descripcion_larga: 'La industria ganadera consume el 70% del agua dulce mundial. Reducir su consumo baja tu riesgo de enfermedades cardíacas y ahorra miles de litros de agua.',
+                es_predeterminado: true,
+                categoria_id: categorias[0].id
+            },
+            {
+                nombre: 'Dormir 8 horas',
+                descripcion_breve: 'Descansa para recuperar cuerpo y mente.',
+                descripcion_larga: 'Un sueño reparador mejora tu capacidad de tomar decisiones conscientes. Además, apagar las luces y equipos a tiempo reduce el gasto innecesario de energía eléctrica.',
+                es_predeterminado: true,
+                categoria_id: categorias[1].id
+            },
+            {
+                nombre: 'Desconectar dispositivos',
+                descripcion_breve: 'Evita la luz azul una hora antes de dormir.',
+                descripcion_larga: 'Eliminas el "consumo vampiro" (electricidad que gastan los equipos en stand-by) y permites que tu cerebro produzca melatonina de forma natural.',
+                es_predeterminado: true,
+                categoria_id: categorias[1].id
+            },
+            {
+                nombre: 'Aprovechar luz natural',
+                descripcion_breve: 'Realiza actividades cerca de ventanas.',
+                descripcion_larga: 'La exposición moderada al sol activa la Vitamina D en tu piel. Al usar menos luz artificial, disminuyes la huella energética de tu hogar.',
+                es_predeterminado: true,
+                categoria_id: categorias[1].id
+            },
+            {
                 nombre: 'Hacer ejercicio 30 min',
                 descripcion_breve: 'Mantén tu corazón sano y activo.',
                 descripcion_larga: 'Si te ejercitas al aire libre, conectas con la naturaleza (Biofilia), lo cual reduce el cortisol. No usar máquinas eléctricas de gimnasio ahorra energía.',
+                es_predeterminado: true,
+                categoria_id: categorias[2].id
+            },
+            {
+                nombre: 'Caminar 10,000 pasos',
+                descripcion_breve: 'Mejora la circulación con movimiento constante.',
+                descripcion_larga: 'Si usas tus piernas en lugar del auto para distancias cortas, eliminas emisiones de gases de efecto invernadero y mejora tu capacidad aeróbica.',
+                es_predeterminado: true,
+                categoria_id: categorias[2].id
+            },
+            {
+                nombre: 'Estiramientos matutinos',
+                descripcion_breve: 'Despierta tus articulaciones.',
+                descripcion_larga: 'Prevenir lesiones significa un cuerpo funcional que requiere menos intervenciones médicas y fármacos a largo plazo, reduciendo residuos químicos.',
+                es_predeterminado: true,
+                categoria_id: categorias[2].id
+            },
+            {
+                nombre: 'Usar escaleras',
+                descripcion_breve: 'Fortalece piernas y mejora resistencia.',
+                descripcion_larga: 'Es ejercicio cardiovascular gratuito. Además, ahorras la electricidad necesaria para mover el motor del ascensor en cada piso.',
                 es_predeterminado: true,
                 categoria_id: categorias[2].id
             },
@@ -55,18 +104,39 @@ const seed = async () => {
                 categoria_id: categorias[3].id
             },
             {
-                nombre: 'Dormir 8 horas',
-                descripcion_breve: 'Descansa para recuperar cuerpo y mente.',
-                descripcion_larga: 'Un sueño reparador mejora tu capacidad de tomar decisiones conscientes. Además, apagar las luces y equipos a tiempo reduce el gasto innecesario de energía eléctrica.',
+                nombre: 'Leer 20 páginas',
+                descripcion_breve: 'Estimula tu cerebro y amplía conocimientos.',
+                descripcion_larga: 'Opta por libros usados, bibliotecas digitales o intercambios. Compartir cultura es una forma de economía circular que salva árboles.',
                 es_predeterminado: true,
-                categoria_id: categorias[1].id
+                categoria_id: categorias[3].id
+            },
+            {
+                nombre: 'Practicar gratitud',
+                descripcion_breve: 'Escribe 3 cosas por las que agradeces.',
+                descripcion_larga: 'La gratitud nos aleja de la cultura del "necesito más". Valorar lo esencial es el primer paso hacia un estilo de vida minimalista y sostenible.',
+                es_predeterminado: true,
+                categoria_id: categorias[3].id
+            },
+            {
+                nombre: 'Digital Detox',
+                descripcion_breve: 'Borra correos basura y archivos viejos.',
+                descripcion_larga: 'El almacenamiento en la nube gasta mucha energía en servidores. Borrar "basura digital" ayuda a reducir la huella de carbono de los centros de datos.',
+                es_predeterminado: true,
+                categoria_id: categorias[3].id
+            },
+            {
+                nombre: 'Baño de 5 minutos',
+                descripcion_breve: 'Higiene personal optimizando el agua.',
+                descripcion_larga: 'Una ducha corta ahorra hasta 40 litros de agua. También reduces el consumo de gas o electricidad necesarios para calentar el agua.',
+                es_predeterminado: true,
+                categoria_id: categorias[0].id
             }
         ]);
 
         // 3. CREAR USUARIOS
         const usuarios = await Usuario.bulkCreate([
             {
-                username: 'admin',
+                username: 'admin_awi',
                 primer_nombre: 'Administrador',
                 segundo_nombre: 'AWI',
                 email: 'admin@awi.com',
@@ -146,7 +216,7 @@ const seed = async () => {
             let fecha = new Date();
             fecha.setDate(hoy.getDate() - i);
             const fechaStr = fecha.toISOString().split('T')[0];
-            
+
             seguimientosFabian.push(
                 {
                     usuario_habito_id: subFabian1.id,
@@ -328,7 +398,7 @@ const seed = async () => {
         console.log('   - Carlos: 1 hábito activo');
         console.log('   - Ana: 2 hábitos activos');
         console.log('   - Luis: 2 hábitos sin actividad');
-        
+
         process.exit(0);
     } catch (error) {
         console.error('❌ Error en el seeder:', error);
