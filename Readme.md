@@ -319,7 +319,7 @@ Este es un proyecto académico, pero las sugerencias son bienvenidas:
 
 **Última actualización**: 26 de enero de 2026
 
-```
+
 awi-project
 ├─ backend
 │  ├─ config
@@ -389,6 +389,7 @@ awi-project
 │  │  │  ├─ AdminHabits.jsx
 │  │  │  ├─ AdminUsers.jsx
 │  │  │  ├─ Home.jsx
+│  │  │  ├─ myHabits.jsx
 │  │  │  ├─ Profile.jsx
 │  │  │  └─ Statistics.jsx
 │  │  └─ services

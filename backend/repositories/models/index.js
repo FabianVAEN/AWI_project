@@ -1,4 +1,4 @@
-const sequelize = require('../../config/database'); // ← Correcto, igual que arriba
+const sequelize = require('../../config/database');
 const Usuario = require('./Usuario');
 const Categoria = require('./Categoria');
 const Habito = require('./Habito');
@@ -32,15 +32,21 @@ UsuarioHabito.belongsTo(Usuario, { foreignKey: 'usuario_id' });
 Habito.hasMany(UsuarioHabito, { foreignKey: 'habito_id', as: 'seguidores' });
 UsuarioHabito.belongsTo(Habito, { foreignKey: 'habito_id', as: 'detalle_habito' });
 
-// 4. UsuarioHabito y Seguimiento (1:N)
-UsuarioHabito.hasMany(Seguimiento, { foreignKey: 'usuario_habito_id', as: 'registros' });
-Seguimiento.belongsTo(UsuarioHabito, { foreignKey: 'usuario_habito_id' });
+// 4. UsuarioHabito y Seguimiento (1:N) - CORREGIDO
+UsuarioHabito.hasMany(Seguimiento, { 
+    foreignKey: 'usuario_habito_id', 
+    as: 'registros' 
+});
+Seguimiento.belongsTo(UsuarioHabito, { 
+    foreignKey: 'usuario_habito_id', 
+    as: 'usuario_habito'  // ¡ALIAS AGREGADO!
+});
 
 // 5. Hábitos Personalizados (1:N)
 Usuario.hasMany(Habito, { 
     foreignKey: 'usuario_id', 
     as: 'habitos_creados',
-    onDelete: 'CASCADE' // Si se borra el usuario, se borran sus hábitos personalizados
+    onDelete: 'CASCADE'
 });
 Habito.belongsTo(Usuario, { foreignKey: 'usuario_id', as: 'creador' });
 
