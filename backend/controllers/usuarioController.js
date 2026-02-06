@@ -63,7 +63,8 @@ const usuarioController = {
                 username: nuevoUsuario.username,
                 email: nuevoUsuario.email,
                 primer_nombre: nuevoUsuario.primer_nombre,
-                created_at: nuevoUsuario.created_at
+                created_at: nuevoUsuario.created_at,
+                es_admin: nuevoUsuario.es_admin
             };
 
             res.status(201).json({ 
@@ -109,7 +110,7 @@ const usuarioController = {
             // Buscar usuario
             const usuario = await Usuario.findOne({ 
                 where: { email },
-                attributes: ['id', 'username', 'email', 'password', 'primer_nombre']
+                attributes: ['id', 'username', 'email', 'password', 'primer_nombre', 'segundo_nombre','es_admin']
             });
 
             if (!usuario) {
@@ -130,7 +131,8 @@ const usuarioController = {
             const token = jwt.sign(
                 { 
                     id: usuario.id, 
-                    email: usuario.email 
+                    email: usuario.email,
+                    es_admin: usuario.es_admin 
                 },
                 JWT_SECRET,
                 { expiresIn: '7d' }
@@ -141,7 +143,9 @@ const usuarioController = {
                 id: usuario.id,
                 username: usuario.username,
                 email: usuario.email,
-                primer_nombre: usuario.primer_nombre
+                primer_nombre: usuario.primer_nombre,
+                segundo_nombre: usuario.segundo_nombre,
+                es_admin: usuario.es_admin 
             };
 
             res.json({ 
