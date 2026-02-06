@@ -65,6 +65,17 @@ export default function Register() {
     return (
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 to-cyan-50 py-12 px-4">
             <Card className="max-w-md w-full">
+                <button
+                    type="button"
+                    onClick={() => navigate('/login')}
+                    className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full w-8 h-8 inline-flex items-center justify-center"
+                    aria-label="Cancelar registro"
+                    title="Cancelar"
+                >
+                    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
                 <div className="text-center mb-8">
                     <h1 className="text-3xl font-bold text-gray-800">Crear Cuenta</h1>
                     <p className="text-gray-600 mt-2">Regístrate para comenzar tu viaje de hábitos saludables</p>
@@ -143,6 +154,14 @@ export default function Register() {
                         isLoading={loading}
                     >
                         Crear Cuenta
+                    </Button>
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        className="w-full border"
+                        onClick={() => navigate('/login')}
+                    >
+                        Cancelar
                     </Button>
                 </form>
 

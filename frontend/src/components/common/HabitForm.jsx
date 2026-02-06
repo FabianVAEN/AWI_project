@@ -24,6 +24,10 @@ export default function HabitForm({
   const [formData, setFormData] = React.useState(initialData);
   const [error, setError] = React.useState('');
 
+  React.useEffect(() => {
+    setFormData(initialData);
+  }, [initialData]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -86,6 +90,7 @@ export default function HabitForm({
         <div className="flex gap-3 justify-end pt-4 border-t">
           <Button
             variant="secondary"
+            type="button"
             onClick={onCancel}
             disabled={isSubmitting}
           >
@@ -94,7 +99,8 @@ export default function HabitForm({
           <Button
             variant="success"
             type="submit"
-            isLoading={isSubmitting}
+            disabled={isSubmitting}
+            
           >
             {mode === 'create' ? 'Crear Hábito' : 'Guardar Cambios'}
           </Button>
