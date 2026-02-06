@@ -108,7 +108,11 @@ export default function MyHabits() {
             setListaHabitos(prev =>
                 prev.map(habito =>
                     habito.id === habitoAEditar.id
-                        ? { ...habito, ...formData }
+                        ? { 
+                            ...habito,
+                             ...formData,
+                            descripcion_breve: formData.descripcion
+                        }
                         : habito
                 )
             );

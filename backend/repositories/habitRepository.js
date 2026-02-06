@@ -88,6 +88,116 @@ class HabitRepository {
         }
     }
 
+    async update(id, data, usuario_id) {
+        try {
+            const suscripcion = await UsuarioHabito.findOne({
+                where: { id, usuario_id },
+                include: [
+                    {
+                        model: Habito,
+                        as: 'detalle_habito'
+                    }
+                ]
+            });
+
+            if (!suscripcion || !suscripcion.detalle_habito) {
+                throw { status: 404, message: "HÃ¡bito no encontrado" };
+            }
+
+            const habito = suscripcion.detalle_habito;
+
+            if (habito.es_predeterminado) {
+                throw { status: 400, message: "Los hÃ¡bitos del catÃ¡logo no se pueden editar" };
+            }
+
+            const updates = {};
+
+            if (typeof data.nombre === 'string') {
+                const nombre = data.nombre.trim();
+                if (!nombre) {
+                    throw { status: 400, message: "El nombre del hÃ¡bito es obligatorio" };
+                }
+                updates.nombre = nombre;
+            }
+
+            if (typeof data.descripcion === 'string') {
+                updates.descripcion_breve = data.descripcion;
+            }
+
+            if (typeof data.descripcion_breve === 'string') {
+                updates.descripcion_breve = data.descripcion_breve;
+            }
+
+            if (typeof data.descripcion_larga === 'string') {
+                updates.descripcion_larga = data.descripcion_larga;
+            }
+
+            if (Object.keys(updates).length === 0) {
+                throw { status: 400, message: "No hay datos para actualizar" };
+            }
+
+            return await habito.update(updates);
+        } catch (error) {
+            console.error('Error en update:', error);
+            throw error;
+        }
+    }
+
+    async update(id, data, usuario_id) {
+        try {
+            const suscripcion = await UsuarioHabito.findOne({
+                where: { id, usuario_id },
+                include: [
+                    {
+                        model: Habito,
+                        as: 'detalle_habito'
+                    }
+                ]
+            });
+
+            if (!suscripcion || !suscripcion.detalle_habito) {
+                throw { status: 404, message: "HÃ¡bito no encontrado" };
+            }
+
+            const habito = suscripcion.detalle_habito;
+
+            if (habito.es_predeterminado) {
+                throw { status: 400, message: "Los hÃ¡bitos del catÃ¡logo no se pueden editar" };
+            }
+
+            const updates = {};
+
+            if (typeof data.nombre === 'string') {
+                const nombre = data.nombre.trim();
+                if (!nombre) {
+                    throw { status: 400, message: "El nombre del hÃ¡bito es obligatorio" };
+                }
+                updates.nombre = nombre;
+            }
+
+            if (typeof data.descripcion === 'string') {
+                updates.descripcion_breve = data.descripcion;
+            }
+
+            if (typeof data.descripcion_breve === 'string') {
+                updates.descripcion_breve = data.descripcion_breve;
+            }
+
+            if (typeof data.descripcion_larga === 'string') {
+                updates.descripcion_larga = data.descripcion_larga;
+            }
+
+            if (Object.keys(updates).length === 0) {
+                throw { status: 400, message: "No hay datos para actualizar" };
+            }
+
+            return await habito.update(updates);
+        } catch (error) {
+            console.error('Error en update:', error);
+            throw error;
+        }
+    }
+    
     // Registrar cumplimiento y actualizar racha
     async toggleComplete(usuario_id, usuario_habito_id) {
         const today = new Date().toISOString().split('T')[0];

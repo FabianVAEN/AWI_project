@@ -275,7 +275,7 @@ export default function Profile() {
                                 <Button variant="ghost" className="w-full justify-start" onClick={() => window.location.href = '/estadisticas'}>
                                     📊 Ver Estadísticas
                                 </Button>
-                                <Button variant="ghost" className="w-full justify-start" onClick={() => window.location.href = '/'}>
+                                <Button variant="ghost" className="w-full justify-start" onClick={() => window.location.href = '/mis-habitos'}>
                                     🎯 Mis Hábitos
                                 </Button>
                                 <Button variant="ghost" className="w-full justify-start text-red-600 hover:bg-red-50">
