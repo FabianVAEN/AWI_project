@@ -30,13 +30,13 @@ export default function Login() {
 
         try {
             setLoading(true);
-            const response = await AuthService.login(formData);
-            
-            if (response.token) {
-                localStorage.setItem('token', response.token);
-                localStorage.setItem('user', JSON.stringify(response.usuario));
-                navigate('/');
-            }
+            await AuthService.login(formData); 
+            navigate('/');
+            // if (response.token) {
+            //     localStorage.setItem('token', response.token);
+            //     localStorage.setItem('user', JSON.stringify(response.usuario));
+            //     navigate('/');
+            // }
         } catch (err) {
             setError(err.message || 'Error al iniciar sesión');
         } finally {
