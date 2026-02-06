@@ -25,6 +25,20 @@ class HabitRepository {
             throw error;
         }
     }
+    // Obtener catálogo de hábitos predeterminados con su categoría
+    async findUserHabitByDefaultId(habito_id, usuario_id) {
+        try {
+            return await UsuarioHabito.findOne({
+                where: {
+                    usuario_id,
+                    habito_id
+                }
+            });
+        } catch (error) {
+            console.error('Error en findUserHabitByDefaultId:', error);
+            throw error;
+        }
+    }
 
     // Obtener lista del usuario autenticado con racha y estado de hoy
     async findUserHabits(usuario_id) {
@@ -62,7 +76,7 @@ class HabitRepository {
                     descripcion_breve: s.detalle_habito.descripcion_breve,
                     descripcion_larga: s.detalle_habito.descripcion_larga,
                     categoria: s.detalle_habito.categoria ? s.detalle_habito.categoria.nombre : 'Sin categoría',
-                    es_predeterminado: s.detalle_habito.es_predeterminado, 
+                    es_predeterminado: s.detalle_habito.es_predeterminado,
                     estado: estadoHoy,
                     racha_actual: s.racha_actual,
                     racha_maxima: s.racha_maxima
@@ -77,7 +91,7 @@ class HabitRepository {
     // Registrar cumplimiento y actualizar racha
     async toggleComplete(usuario_id, usuario_habito_id) {
         const today = new Date().toISOString().split('T')[0];
-        
+
         const suscripcion = await UsuarioHabito.findOne({
             where: { id: usuario_habito_id, usuario_id }
         });
@@ -111,7 +125,7 @@ class HabitRepository {
         if (!suscripcion) return;
 
         const seguimientos = await Seguimiento.findAll({
-            where: { 
+            where: {
                 usuario_habito_id,
                 estado: 'completado'
             },
@@ -122,7 +136,7 @@ class HabitRepository {
         if (seguimientos.length > 0) {
             const today = new Date();
             today.setHours(0, 0, 0, 0);
-            
+
             const lastDate = new Date(seguimientos[0].fecha);
             lastDate.setHours(0, 0, 0, 0);
 
@@ -134,7 +148,7 @@ class HabitRepository {
                 racha = 1;
                 for (let i = 0; i < seguimientos.length - 1; i++) {
                     const current = new Date(seguimientos[i].fecha);
-                    const next = new Date(seguimientos[i+1].fecha);
+                    const next = new Date(seguimientos[i + 1].fecha);
                     current.setHours(0, 0, 0, 0);
                     next.setHours(0, 0, 0, 0);
 
@@ -159,45 +173,104 @@ class HabitRepository {
 
     // Obtener estadísticas del usuario
     async getUserStats(usuario_id) {
-        const suscripciones = await UsuarioHabito.findAll({
-            where: { usuario_id },
-            include: [{ model: Habito, as: 'detalle_habito' }]
-        });
+        try {
+            console.log('Calculando estadísticas para usuario:', usuario_id);
 
-        const totalHabitos = suscripciones.length;
-        const rachaPromedio = totalHabitos > 0 
-            ? suscripciones.reduce((acc, s) => acc + s.racha_actual, 0) / totalHabitos 
-            : 0;
-        
-        const mejorRacha = suscripciones.reduce((acc, s) => Math.max(acc, s.racha_maxima), 0);
-
-        const last7Days = [];
-        for (let i = 6; i >= 0; i--) {
-            const d = new Date();
-            d.setDate(d.getDate() - i);
-            last7Days.push(d.toISOString().split('T')[0]);
-        }
-
-        const historial = await Promise.all(last7Days.map(async (fecha) => {
-            const count = await Seguimiento.count({
-                include: [{
-                    model: UsuarioHabito,
-                    as: 'usuario_habito',
-                    where: { usuario_id }
-                }],
-                where: { fecha, estado: 'completado' }
+            // 1. Obtener hábitos del usuario con sus detalles
+            const suscripciones = await UsuarioHabito.findAll({
+                where: { usuario_id },
+                include: [
+                    {
+                        model: Habito,
+                        as: 'detalle_habito',
+                        include: [{
+                            model: Categoria,
+                            as: 'categoria'
+                        }]
+                    }
+                ]
             });
-            return { fecha, completados: count };
-        }));
 
-        return {
-            totalHabitos,
-            rachaPromedio: Math.round(rachaPromedio * 10) / 10,
-            mejorRacha,
-            historial
-        };
+            const totalHabitos = suscripciones.length;
+
+            // 2. Calcular rachas
+            let sumaRachas = 0;
+            let mejorRacha = 0;
+
+            suscripciones.forEach(s => {
+                sumaRachas += s.racha_actual || 0;
+                if (s.racha_maxima > mejorRacha) {
+                    mejorRacha = s.racha_maxima;
+                }
+            });
+
+            const rachaPromedio = totalHabitos > 0 ? Math.round(sumaRachas / totalHabitos) : 0;
+
+            // 3. Obtener los últimos 7 días
+            const historial = [];
+            const hoy = new Date();
+
+            // Obtener IDs de UsuarioHabito
+            const usuarioHabitoIds = suscripciones.map(s => s.id);
+
+            // Si no hay hábitos, devolver historial vacío
+            if (usuarioHabitoIds.length === 0) {
+                for (let i = 6; i >= 0; i--) {
+                    const fecha = new Date(hoy);
+                    fecha.setDate(hoy.getDate() - i);
+                    historial.push({
+                        fecha: fecha.toISOString().split('T')[0],
+                        completados: 0
+                    });
+                }
+
+                return {
+                    totalHabitos,
+                    rachaPromedio,
+                    mejorRacha,
+                    historial
+                };
+            }
+
+            // 4. Contar completados por fecha (USANDO EL ALIAS CORRECTO)
+            for (let i = 6; i >= 0; i--) {
+                const fecha = new Date(hoy);
+                fecha.setDate(hoy.getDate() - i);
+                const fechaStr = fecha.toISOString().split('T')[0];
+
+                const count = await Seguimiento.count({
+                    where: {
+                        fecha: fechaStr,
+                        estado: 'completado'
+                    },
+                    include: [{
+                        model: UsuarioHabito,
+                        as: 'usuario_habito',  // ← ¡USANDO EL ALIAS CORRECTO!
+                        where: {
+                            id: usuarioHabitoIds
+                        }
+                    }]
+                });
+
+                historial.push({
+                    fecha: fechaStr,
+                    completados: count
+                });
+            }
+
+            console.log('Estadísticas calculadas:', { totalHabitos, rachaPromedio, mejorRacha });
+
+            return {
+                totalHabitos,
+                rachaPromedio,
+                mejorRacha,
+                historial
+            };
+        } catch (error) {
+            console.error('Error en getUserStats:', error);
+            throw error;
+        }
     }
-
     // --- MÉTODOS EXISTENTES ---
     async findUserHabitById(id, usuario_id) {
         return await UsuarioHabito.findOne({ where: { id, usuario_id } });
