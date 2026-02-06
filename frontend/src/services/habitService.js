@@ -73,8 +73,8 @@ class HabitService {
     });
   }
 
-  static async getUserStats() {
-    return this._fetchWithAuth('/estadisticas');
+  static async getUserStats(range = 'week') {
+      return this._fetchWithAuth(`/estadisticas?range=${range}`);
   }
 
 }

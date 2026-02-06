@@ -60,8 +60,8 @@ class HabitService {
     }
 
     // --- NUEVOS MÉTODOS DE ESTADÍSTICAS ---
-    async getUserStats(usuario_id) {
-        return await HabitRepository.getUserStats(usuario_id);
+    async getUserStats(usuario_id, range = 'week') {
+        return await HabitRepository.getUserStats(usuario_id, range);
     }
 
     async getAdminStats() {

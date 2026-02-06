@@ -172,21 +172,18 @@ class HabitRepository {
     }
 
     // Obtener estadísticas del usuario
-    async getUserStats(usuario_id) {
+    async getUserStats(usuario_id, range = 'week') {
         try {
-            console.log('Calculando estadísticas para usuario:', usuario_id);
+            console.log(`Calculando estadísticas para usuario: ${usuario_id}, rango: ${range}`);
 
-            // 1. Obtener hábitos del usuario con sus detalles
+            // 1. Obtener hábitos del usuario
             const suscripciones = await UsuarioHabito.findAll({
                 where: { usuario_id },
                 include: [
                     {
                         model: Habito,
                         as: 'detalle_habito',
-                        include: [{
-                            model: Categoria,
-                            as: 'categoria'
-                        }]
+                        include: [{ model: Categoria, as: 'categoria' }]
                     }
                 ]
             });
@@ -206,16 +203,23 @@ class HabitRepository {
 
             const rachaPromedio = totalHabitos > 0 ? Math.round(sumaRachas / totalHabitos) : 0;
 
-            // 3. Obtener los últimos 7 días
+            // 3. Determinar días según el rango
+            let dias = 7; // Por defecto semana
+            switch (range) {
+                case 'month': dias = 30; break;
+                case 'year': dias = 365; break;
+                case 'all': dias = 365 * 2; break; // Últimos 2 años
+                default: dias = 7;
+            }
+
+            // 4. Obtener historial
             const historial = [];
             const hoy = new Date();
-
-            // Obtener IDs de UsuarioHabito
             const usuarioHabitoIds = suscripciones.map(s => s.id);
 
             // Si no hay hábitos, devolver historial vacío
             if (usuarioHabitoIds.length === 0) {
-                for (let i = 6; i >= 0; i--) {
+                for (let i = dias - 1; i >= 0; i--) {
                     const fecha = new Date(hoy);
                     fecha.setDate(hoy.getDate() - i);
                     historial.push({
@@ -223,48 +227,40 @@ class HabitRepository {
                         completados: 0
                     });
                 }
+            } else {
+                // Contar completados por fecha
+                for (let i = dias - 1; i >= 0; i--) {
+                    const fecha = new Date();  // ✅ NUEVA FECHA EN CADA ITERACIÓN
+                    fecha.setDate(fecha.getDate() - i);  // ✅ USAR 'fecha.getDate()' no 'hoy.getDate()'
+                    const fechaStr = fecha.toISOString().split('T')[0];
 
-                return {
-                    totalHabitos,
-                    rachaPromedio,
-                    mejorRacha,
-                    historial
-                };
-            }
-
-            // 4. Contar completados por fecha (USANDO EL ALIAS CORRECTO)
-            for (let i = 6; i >= 0; i--) {
-                const fecha = new Date(hoy);
-                fecha.setDate(hoy.getDate() - i);
-                const fechaStr = fecha.toISOString().split('T')[0];
-
-                const count = await Seguimiento.count({
-                    where: {
-                        fecha: fechaStr,
-                        estado: 'completado'
-                    },
-                    include: [{
-                        model: UsuarioHabito,
-                        as: 'usuario_habito',  // ← ¡USANDO EL ALIAS CORRECTO!
+                    const count = await Seguimiento.count({
                         where: {
-                            id: usuarioHabitoIds
-                        }
-                    }]
-                });
+                            fecha: fechaStr,
+                            estado: 'completado'
+                        },
+                        include: [{
+                            model: UsuarioHabito,
+                            as: 'usuario_habito', //modificado uduarioHabito checar
+                            where: {
+                                id: usuarioHabitoIds
+                            }
+                        }]
+                    });
 
-                historial.push({
-                    fecha: fechaStr,
-                    completados: count
-                });
+                    historial.push({
+                        fecha: fechaStr,
+                        completados: count
+                    });
+                }
             }
-
-            console.log('Estadísticas calculadas:', { totalHabitos, rachaPromedio, mejorRacha });
 
             return {
                 totalHabitos,
                 rachaPromedio,
                 mejorRacha,
-                historial
+                historial,
+                rango: range // Para debug
             };
         } catch (error) {
             console.error('Error en getUserStats:', error);
