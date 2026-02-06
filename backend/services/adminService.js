@@ -1,4 +1,4 @@
-const { Habito, Categoria, Usuario, UsuarioHabito } = require('../repositories/models');
+const { Habito, Categoria, Usuario, UsuarioHabito, sequelize } = require('../repositories/models');
 
 class AdminService {
     // --- GESTIÓN DE CATEGORÍAS ---
@@ -20,7 +20,7 @@ class AdminService {
 
     async createCategory(data) {
         const { nombre, descripcion, icono } = data;
-        
+
         if (!nombre) {
             throw { status: 400, message: "El nombre de la categoría es obligatorio" };
         }
@@ -164,6 +164,7 @@ class AdminService {
     // --- ESTADÍSTICAS GENERALES ---
     async getDashboardStats() {
         try {
+            // 1. Estadísticas básicas (funcionan perfectamente)
             const totalUsuarios = await Usuario.count();
             const totalHabitos = await Habito.count();
             const habitosPredeterminados = await Habito.count({ where: { es_predeterminado: true } });
@@ -171,33 +172,27 @@ class AdminService {
             const totalCategorias = await Categoria.count();
             const totalSuscripciones = await UsuarioHabito.count();
 
-            // Ranking de rachas
+            // 2. Ranking de rachas (SÍ funciona, según tus logs)
             const rankingRachas = await UsuarioHabito.findAll({
                 attributes: ['racha_actual'],
                 include: [
                     { model: Habito, as: 'detalle_habito', attributes: ['nombre'] },
-                    { model: Usuario, as: 'usuario', attributes: ['username'] }
+                    { model: Usuario, attributes: ['username'] }
                 ],
                 order: [['racha_actual', 'DESC']],
-                limit: 5
+                limit: 3
             });
 
-            // Hábitos más populares (por suscripciones)
-            const habitosPopulares = await Habito.findAll({
-                attributes: [
-                    'nombre',
-                    [Habito.sequelize.fn('COUNT', Habito.sequelize.col('suscripciones.id')), 'total_suscripciones']
-                ],
-                include: [{
-                    model: UsuarioHabito,
-                    as: 'suscripciones',
-                    attributes: []
-                }],
-                group: ['Habito.id', 'Habito.nombre'],
-                order: [[Habito.sequelize.fn('COUNT', Habito.sequelize.col('suscripciones.id')), 'DESC']],
-                limit: 5,
-                subQuery: false
-            });
+            const [habitosPopularesResult] = await sequelize.query(`
+                SELECT 
+                    h.nombre,
+                    COUNT(uh.id) as total_suscripciones
+                FROM usuario_habitos uh
+                INNER JOIN habitos h ON h.id = uh.habito_id
+                GROUP BY h.id, h.nombre
+                ORDER BY total_suscripciones DESC
+                LIMIT 3
+            `);
 
             return {
                 totalUsuarios,
@@ -207,10 +202,15 @@ class AdminService {
                 totalCategorias,
                 totalSuscripciones,
                 rankingRachas,
-                habitosPopulares
+                habitosPopulares: habitosPopularesResult
             };
+
         } catch (error) {
-            throw { status: 500, message: error.message };
+            console.error('Error en getDashboardStats:', error);
+            throw {
+                status: 500,
+                message: `Error al obtener estadísticas: ${error.message}`
+            };
         }
     }
 

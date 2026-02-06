@@ -7,7 +7,7 @@ export default function Home() {
     const [habitos, setHabitos] = useState([]);
     const [listaHabitos, setListaHabitos] = useState([]);
     const [error, setError] = useState('');
-    const [modalCrearAbierto, setModalCrearAbierto] = useState(false); 
+    const [modalCrearAbierto, setModalCrearAbierto] = useState(false);
     const [modalEditarAbierto, setModalEditarAbierto] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [habitoAEditar, setHabitoAEditar] = useState(null);
@@ -33,10 +33,10 @@ export default function Home() {
                 HabitService.getUserHabits()
             ]);
 
-             console.log('📊 Lista de hábitos:', listaData); // ← AGREGAR ESTA LÍNEA
-
             setHabitos(habitosData);
-            setListaHabitos(listaData);
+            // Ordenar por ID para mantener orden consistente
+            const listaOrdenada = listaData.sort((a, b) => a.id - b.id);
+            setListaHabitos(listaOrdenada);
         } catch (err) {
             setError('Error de conexión. Verifica que el servidor esté corriendo.');
             console.error(err);
@@ -161,17 +161,14 @@ export default function Home() {
                     {categorias.length > 1 && (
                         <div className="flex flex-wrap justify-center gap-2 mb-6">
                             {categorias.map((categoria) => (
-                                <button
+                                <Button
                                     key={categoria}
-                                    type="button"
+                                    variant={categoriaActiva === categoria ? 'primary' : 'ghost'}
+                                    size="sm"
                                     onClick={() => setCategoriaActiva(categoria)}
-                                    className={`px-4 py-2 rounded-full text-sm font-semibold transition-all ${categoriaActiva === categoria
-                                        ? 'bg-emerald-600 text-white shadow-md'
-                                        : 'bg-white text-emerald-700 border border-emerald-200 hover:bg-emerald-50'
-                                        }`}
                                 >
                                     {categoria}
-                                </button>
+                                </Button>
                             ))}
                         </div>
                     )}
@@ -181,57 +178,65 @@ export default function Home() {
                         </Card>
                     ) : (
                         <div className="overflow-x-auto pb-4">
-                            <div className="flex gap-4 min-w-max px-4">
+                            <div className="flex gap-4 min-w-max px-4 items-stretch">
                                 {habitosFiltrados.map((habito) => {
                                     const yaAgregado = habitosYaAgregados.includes(habito.id);
-                                    const expanded = !!expandedCatalog[habito.id];
                                     return (
                                         <div
                                             key={habito.id}
-                                            className={`flex-shrink-0 w-64 p-6 rounded-xl shadow-lg transition-all transform hover:scale-105 ${yaAgregado
-                                                ? 'bg-gray-300 cursor-not-allowed opacity-60'
-                                                : 'bg-gradient-to-br from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600'
-                                                }`}
+                                            className="flex-shrink-0 w-80 bg-white rounded-2xl shadow-lg overflow-hidden border-2 border-gray-200 hover:shadow-xl transition-all flex flex-col"
                                         >
-                                            <h3 className="text-white font-bold text-lg mb-2">
-                                                {habito.nombre}
-                                            </h3>
-                                            <p className="text-white text-sm opacity-90">
-                                                {habito.descripcion_breve}
-                                            </p>
-                                            {habito.descripcion_larga && (
-                                                <div className="mt-3">
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => toggleCatalogDescripcion(habito.id)}
-                                                        className="text-white text-sm underline underline-offset-2"
-                                                    >
-                                                        {expanded ? 'Ver menos' : 'Ver más'}
-                                                    </button>
-                                                    {expanded && (
-                                                        <p className="text-white text-lg opacity-90 mt-2">
-                                                            {habito.descripcion_larga}
-                                                        </p>
+                                            {/* Header de la tarjeta */}
+                                            <div className={`p-4 ${yaAgregado ? 'bg-gray-200' : 'bg-gradient-to-r from-emerald-500 to-teal-500'}`}>
+                                                <h3 className={`text-lg font-bold ${yaAgregado ? 'text-gray-700' : 'text-white'}`}>
+                                                    {habito.nombre}
+                                                </h3>
+                                                {habito.categoria && (
+                                                    <span className={`inline-block mt-2 px-2 py-1 text-xs font-medium rounded-full ${yaAgregado
+                                                        ? 'bg-gray-300 text-gray-700'
+                                                        : 'bg-white/20 text-white'
+                                                        }`}>
+                                                        {habito.categoria.nombre}
+                                                    </span>
+                                                )}
+                                            </div>
+
+                                            {/* Contenido de la tarjeta */}
+                                            <div className="p-4 flex-1 flex flex-col">
+                                                <div className="flex-1">
+                                                    <p className="text-gray-700 text-sm mb-3">
+                                                        {habito.descripcion_breve}
+                                                    </p>
+
+                                                    {/* Botón "Saber más" */}
+                                                    {habito.descripcion_larga && (
+                                                        <div className="mb-3">
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => toggleCatalogDescripcion(habito.id)}
+                                                                className="text-emerald-700 text-xs font-medium underline underline-offset-2 hover:text-emerald-800 transition-colors"
+                                                            >
+                                                                {expandedCatalog[habito.id] ? '▲ Ver menos' : '▼ Saber más'}
+                                                            </button>
+                                                            {expandedCatalog[habito.id] && (
+                                                                <p className="text-gray-600 text-sm mt-2 p-3 bg-emerald-50 rounded-lg border border-emerald-200">
+                                                                    {habito.descripcion_larga}
+                                                                </p>
+                                                            )}
+                                                        </div>
                                                     )}
                                                 </div>
-                                            )}
-                                            {yaAgregado && (
-                                                <span className="inline-block mt-3 px-3 py-1 bg-white text-gray-700 text-xs rounded-full">
-                                                    ✓ Agregado
-                                                </span>
-                                            )}
-                                            <div className="mt-4">
-                                                <button
-                                                    type="button"
+
+                                                {/* Botón de acción */}
+                                                <Button
+                                                    variant={yaAgregado ? 'ghost' : 'primary'}
+                                                    size="sm"
                                                     onClick={() => !yaAgregado && agregarHabito(habito.id)}
                                                     disabled={yaAgregado}
-                                                    className={`w-full px-4 py-2 rounded-lg text-sm font-semibold transition-all ${yaAgregado
-                                                        ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                                                        : 'bg-white text-emerald-700 hover:bg-emerald-50'
-                                                        }`}
+                                                    className="w-full mt-auto"
                                                 >
-                                                    {yaAgregado ? 'Agregado' : 'Agregar'}
-                                                </button>
+                                                    {yaAgregado ? '✓ Ya está en tu lista' : '+ Agregar a mi lista'}
+                                                </Button>
                                             </div>
                                         </div>
                                     );
@@ -271,7 +276,7 @@ export default function Home() {
                         Crear Hábito Rápido
                         <div className="absolute top-full right-4 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-800"></div>
                     </div>
-                    
+
                     {/* Botón */}
                     <button
                         onClick={() => setModalCrearAbierto(true)}
@@ -331,7 +336,7 @@ export default function Home() {
                                             </div>
                                         )}
                                         {/* Racha */}
-                                        
+
                                         {habito.racha_actual > 0 && (
                                             <div className="mb-4 p-2 bg-emerald-50 rounded-lg">
                                                 <p className="text-sm text-emerald-700">
