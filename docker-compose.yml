@@ -1,7 +1,6 @@
 version: '3.8'
 
 services:
-  # Servicio de PostgreSQL
   postgres:
     image: postgres:15
     container_name: awi_db
@@ -22,7 +21,6 @@ services:
       timeout: 5s
       retries: 5
 
-  # Servicio del Backend (API)
   backend:
     build: 
       context: ./backend
@@ -48,6 +46,24 @@ services:
       - ./backend:/app
       - /app/node_modules
     command: npm start
+    restart: unless-stopped
+
+  # Servicio de backups
+  cron:
+    build:
+      context: ./cron
+    container_name: awi_cron
+    environment:
+      DB_HOST: postgres
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: awi_db
+    volumes:
+      - ./backups:/backups
+    depends_on:
+      - postgres
+    networks:
+      - awi-network
     restart: unless-stopped
 
 volumes:

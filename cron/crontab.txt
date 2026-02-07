@@ -1,0 +1,1 @@
+*/2 * * * * /scripts/backup.sh >> /backups/cron.log 2>&1
