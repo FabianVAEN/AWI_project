@@ -1,6 +1,9 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Card, Button, Input, LoadingScreen } from '../components/common';
 import AuthService from '../services/authService';
+import HabitService from '../services/habitService';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 export default function Profile() {
     const [user, setUser] = useState(null);
@@ -40,14 +43,35 @@ export default function Profile() {
     };
 
     const loadUserStats = async () => {
-        // TODO: Conectar con backend para obtener estadísticas reales
-        // Cuando el backend tenga los endpoints de estadísticas, reemplazar esto
-        setStats({
-            totalHabits: 8,
-            completedToday: 5,
-            streak: 14,
-            completionRate: 72
-        });
+        try {
+            const data = await HabitService.getUserStats('week');
+            let completedToday = data?.completadosHoy;
+            let totalHabits = data?.totalHabitos;
+
+            if (typeof completedToday === 'undefined') {
+                const habits = await HabitService.getUserHabits();
+                completedToday = Array.isArray(habits)
+                    ? habits.filter(habit => habit.estado === 'completado').length
+                    : 0;
+                if (typeof totalHabits === 'undefined') {
+                    totalHabits = Array.isArray(habits) ? habits.length : 0;
+                }
+            }
+
+            setStats({
+                totalHabits: totalHabits || 0,
+                completedToday: completedToday || 0,
+                streak: data.rachaActual || 0,
+                completionRate: data.tasaExito || 0
+            });
+        } catch (error) {
+            setStats({
+                totalHabits: 0,
+                completedToday: 0,
+                streak: 0,
+                completionRate: 0
+            });
+        }
     };
 
     const handleInputChange = (e) => {
@@ -63,9 +87,28 @@ export default function Profile() {
         setMessage({ type: 'info', text: 'Guardando cambios...' });
 
         try {
-            // TODO: Conectar con backend para actualizar perfil
-            // Por ahora, actualizar solo en localStorage
-            AuthService.updateUserData(formData);
+            const response = await fetch(`${API_URL}/usuarios/perfil`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...AuthService.getAuthHeader()
+                },
+                body: JSON.stringify(formData)
+            });
+
+            if (response.status === 401) {
+                AuthService.logout();
+                window.location.href = '/login';
+                throw new Error('Sesión expirada');
+            }
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || 'Error al actualizar perfil');
+            }
+
+            AuthService.updateUserData(data.usuario || data || formData);
             
             setMessage({ type: 'success', text: 'Perfil actualizado correctamente' });
             setEditMode(false);
@@ -136,9 +179,9 @@ export default function Profile() {
                 )}
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    {/* Columna izquierda: Información personal */}
+                    {/* Columna izquierda: Informacion personal */}
                     <div className="lg:col-span-2 space-y-8">
-                        {/* Información Personal */}
+                        {/* Informacion Personal */}
                         <Card>
                             <div className="flex justify-between items-center mb-6">
                                 <h2 className="text-xl font-semibold text-gray-800">Información Personal</h2>
@@ -212,18 +255,24 @@ export default function Profile() {
                                             <p className="text-gray-700">Contraseña</p>
                                             <p className="text-sm text-gray-500">Última actualización: Hace 30 días</p>
                                         </div>
+
+                                        {/*
+                                        Botón para cambiar contraseña descomentar a futuro 
+                                        {/*
                                         <Button 
                                             variant="ghost" 
                                             onClick={handleChangePassword}
                                         >
                                             Cambiar Contraseña
                                         </Button>
+                                        */}
+
                                     </div>
                                 </div>
                             </div>
                         </Card>
 
-                        {/* Estadísticas rápidas */}
+                        {/* Estadísticas rapidas */}
                         <Card>
                             <h2 className="text-xl font-semibold text-gray-800 mb-6">Mi Progreso</h2>
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -259,7 +308,7 @@ export default function Profile() {
                             <div className="mt-6 pt-6 border-t space-y-3">
                                 <div className="text-sm text-gray-600">
                                     <p className="font-medium">Miembro desde</p>
-                                    <p className="text-xs">Enero 2024</p>
+                                    <p className="text-xs">2026</p>
                                 </div>
                                 <div className="text-sm text-gray-600">
                                     <p className="font-medium">Estado</p>
@@ -268,19 +317,22 @@ export default function Profile() {
                             </div>
                         </Card>
 
-                        {/* Acciones rápidas */}
+                        {/* Acciones rapidas */}
                         <Card>
-                            <h3 className="text-lg font-semibold text-gray-800 mb-4">Acciones Rápidas</h3>
+                            <h3 className="text-lg font-semibold text-gray-800 mb-4">Acciones Rapidas</h3>
                             <div className="space-y-2">
                                 <Button variant="ghost" className="w-full justify-start" onClick={() => window.location.href = '/estadisticas'}>
-                                    📊 Ver Estadísticas
+                                    📊 Ver Estadisticas
                                 </Button>
                                 <Button variant="ghost" className="w-full justify-start" onClick={() => window.location.href = '/mis-habitos'}>
-                                    🎯 Mis Hábitos
+                                    🎯 Mis Habitos
                                 </Button>
+                                {/* Botón para eliminar cuenta => descomentar a futuro 
                                 <Button variant="ghost" className="w-full justify-start text-red-600 hover:bg-red-50">
-                                    🗑️ Eliminar Cuenta
+                                     🗑️ Eliminar Cuenta
                                 </Button>
+                                */}
+                                
                             </div>
                         </Card>
                     </div>
@@ -289,3 +341,5 @@ export default function Profile() {
         </div>
     );
 }
+
+

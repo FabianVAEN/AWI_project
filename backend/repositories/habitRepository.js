@@ -1,8 +1,8 @@
-const { Habito, UsuarioHabito, Seguimiento, Categoria } = require('./models');
+﻿const { Habito, UsuarioHabito, Seguimiento, Categoria } = require('./models');
 const { Op } = require('sequelize');
 
 class HabitRepository {
-    // Obtener catálogo de hábitos predeterminados con su categoría
+    // Obtener catÃ¡logo de hÃ¡bitos predeterminados con su categorÃ­a
     async findAllDefaults() {
         try {
             return await Habito.findAll({
@@ -25,7 +25,7 @@ class HabitRepository {
             throw error;
         }
     }
-    // Obtener catálogo de hábitos predeterminados con su categoría
+    // Obtener catÃ¡logo de hÃ¡bitos predeterminados con su categorÃ­a
     async findUserHabitByDefaultId(habito_id, usuario_id) {
         try {
             return await UsuarioHabito.findOne({
@@ -75,7 +75,7 @@ class HabitRepository {
                     nombre: s.detalle_habito.nombre,
                     descripcion_breve: s.detalle_habito.descripcion_breve,
                     descripcion_larga: s.detalle_habito.descripcion_larga,
-                    categoria: s.detalle_habito.categoria ? s.detalle_habito.categoria.nombre : 'Sin categoría',
+                    categoria: s.detalle_habito.categoria ? s.detalle_habito.categoria.nombre : 'Sin categorÃ­a',
                     es_predeterminado: s.detalle_habito.es_predeterminado,
                     estado: estadoHoy,
                     racha_actual: s.racha_actual,
@@ -101,13 +101,13 @@ class HabitRepository {
             });
 
             if (!suscripcion || !suscripcion.detalle_habito) {
-                throw { status: 404, message: "HÃ¡bito no encontrado" };
+                throw { status: 404, message: "HÃƒÂ¡bito no encontrado" };
             }
 
             const habito = suscripcion.detalle_habito;
 
             if (habito.es_predeterminado) {
-                throw { status: 400, message: "Los hÃ¡bitos del catÃ¡logo no se pueden editar" };
+                throw { status: 400, message: "Los hÃƒÂ¡bitos del catÃƒÂ¡logo no se pueden editar" };
             }
 
             const updates = {};
@@ -115,7 +115,7 @@ class HabitRepository {
             if (typeof data.nombre === 'string') {
                 const nombre = data.nombre.trim();
                 if (!nombre) {
-                    throw { status: 400, message: "El nombre del hÃ¡bito es obligatorio" };
+                    throw { status: 400, message: "El nombre del hÃƒÂ¡bito es obligatorio" };
                 }
                 updates.nombre = nombre;
             }
@@ -156,13 +156,13 @@ class HabitRepository {
             });
 
             if (!suscripcion || !suscripcion.detalle_habito) {
-                throw { status: 404, message: "HÃ¡bito no encontrado" };
+                throw { status: 404, message: "HÃƒÂ¡bito no encontrado" };
             }
 
             const habito = suscripcion.detalle_habito;
 
             if (habito.es_predeterminado) {
-                throw { status: 400, message: "Los hÃ¡bitos del catÃ¡logo no se pueden editar" };
+                throw { status: 400, message: "Los hÃƒÂ¡bitos del catÃƒÂ¡logo no se pueden editar" };
             }
 
             const updates = {};
@@ -170,7 +170,7 @@ class HabitRepository {
             if (typeof data.nombre === 'string') {
                 const nombre = data.nombre.trim();
                 if (!nombre) {
-                    throw { status: 400, message: "El nombre del hÃ¡bito es obligatorio" };
+                    throw { status: 400, message: "El nombre del hÃƒÂ¡bito es obligatorio" };
                 }
                 updates.nombre = nombre;
             }
@@ -206,7 +206,7 @@ class HabitRepository {
             where: { id: usuario_habito_id, usuario_id }
         });
 
-        if (!suscripcion) throw new Error('Suscripción no encontrada');
+        if (!suscripcion) throw new Error('SuscripciÃ³n no encontrada');
 
         let seguimiento = await Seguimiento.findOne({
             where: { usuario_habito_id, fecha: today }
@@ -229,7 +229,7 @@ class HabitRepository {
         return seguimiento;
     }
 
-    // Lógica para calcular y actualizar la racha
+    // LÃ³gica para calcular y actualizar la racha
     async updateStreak(usuario_habito_id) {
         const suscripcion = await UsuarioHabito.findByPk(usuario_habito_id);
         if (!suscripcion) return;
@@ -253,7 +253,7 @@ class HabitRepository {
             const diffTime = Math.abs(today - lastDate);
             const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-            // Si el último completado es hoy o ayer, la racha sigue
+            // Si el Ãºltimo completado es hoy o ayer, la racha sigue
             if (diffDays <= 1) {
                 racha = 1;
                 for (let i = 0; i < seguimientos.length - 1; i++) {
@@ -281,12 +281,12 @@ class HabitRepository {
         });
     }
 
-    // Obtener estadísticas del usuario
+    // Obtener estadÃ­sticas del usuario
     async getUserStats(usuario_id, range = 'week') {
         try {
-            console.log(`Calculando estadísticas para usuario: ${usuario_id}, rango: ${range}`);
+            console.log(`Calculando estadÃ­sticas para usuario: ${usuario_id}, rango: ${range}`);
 
-            // 1. Obtener hábitos del usuario
+            // 1. Obtener hÃ¡bitos del usuario
             const suscripciones = await UsuarioHabito.findAll({
                 where: { usuario_id },
                 include: [
@@ -303,22 +303,26 @@ class HabitRepository {
             // 2. Calcular rachas
             let sumaRachas = 0;
             let mejorRacha = 0;
-
+            let rachaActual = 0;
+            
             suscripciones.forEach(s => {
                 sumaRachas += s.racha_actual || 0;
                 if (s.racha_maxima > mejorRacha) {
                     mejorRacha = s.racha_maxima;
                 }
+                if ((s.racha_actual || 0) > rachaActual) {
+                    rachaActual = s.racha_actual || 0;
+                }
             });
 
             const rachaPromedio = totalHabitos > 0 ? Math.round(sumaRachas / totalHabitos) : 0;
 
-            // 3. Determinar días según el rango
+            // 3. Determinar dÃ­as segÃºn el rango
             let dias = 7; // Por defecto semana
             switch (range) {
                 case 'month': dias = 30; break;
                 case 'year': dias = 365; break;
-                case 'all': dias = 365 * 2; break; // Últimos 2 años
+                case 'all': dias = 365 * 2; break; // Ãšltimos 2 aÃ±os
                 default: dias = 7;
             }
 
@@ -327,7 +331,50 @@ class HabitRepository {
             const hoy = new Date();
             const usuarioHabitoIds = suscripciones.map(s => s.id);
 
-            // Si no hay hábitos, devolver historial vacío
+            // Completados de hoy
+            let completadosHoy = 0;
+            if (usuarioHabitoIds.length > 0) {
+                const fechaHoy = new Date().toISOString().split('T')[0];
+                completadosHoy = await Seguimiento.count({
+                    where: {
+                        fecha: fechaHoy,
+                        estado: 'completado'
+                    },
+                    include: [{
+                        model: UsuarioHabito,
+                        as: 'usuario_habito',
+                        where: { id: usuarioHabitoIds }
+                    }]
+                });
+            }
+
+            // Tasa de exito
+            let tasaExito = 0;
+            if (usuarioHabitoIds.length > 0) {
+                const endDate = new Date();
+                const startDate = new Date();
+                startDate.setDate(endDate.getDate() - 6);
+                const startStr = startDate.toISOString().split('T')[0];
+                const endStr = endDate.toISOString().split('T')[0];
+
+                const completadosSemana = await Seguimiento.count({
+                    where: {
+                        fecha: { [Op.between]: [startStr, endStr] },
+                        estado: 'completado'
+                    },
+                    include: [{
+                        model: UsuarioHabito,
+                        as: 'usuario_habito',
+                        where: { id: usuarioHabitoIds }
+                    }]
+                });
+
+                const totalPosibles = totalHabitos * 7;
+                tasaExito = totalPosibles > 0
+                    ? Math.round((completadosSemana / totalPosibles) * 100)
+                    : 0;
+            }    
+            // Si no hay hÃ¡bitos, devolver historial vacÃ­o
             if (usuarioHabitoIds.length === 0) {
                 for (let i = dias - 1; i >= 0; i--) {
                     const fecha = new Date(hoy);
@@ -340,8 +387,8 @@ class HabitRepository {
             } else {
                 // Contar completados por fecha
                 for (let i = dias - 1; i >= 0; i--) {
-                    const fecha = new Date();  // ✅ NUEVA FECHA EN CADA ITERACIÓN
-                    fecha.setDate(fecha.getDate() - i);  // ✅ USAR 'fecha.getDate()' no 'hoy.getDate()'
+                    const fecha = new Date();  // âœ… NUEVA FECHA EN CADA ITERACIÃ“N
+                    fecha.setDate(fecha.getDate() - i);  // âœ… USAR 'fecha.getDate()' no 'hoy.getDate()'
                     const fechaStr = fecha.toISOString().split('T')[0];
 
                     const count = await Seguimiento.count({
@@ -367,6 +414,9 @@ class HabitRepository {
 
             return {
                 totalHabitos,
+                completadosHoy,
+                rachaActual,
+                tasaExito,
                 rachaPromedio,
                 mejorRacha,
                 historial,
@@ -377,7 +427,7 @@ class HabitRepository {
             throw error;
         }
     }
-    // --- MÉTODOS EXISTENTES ---
+    // --- MÃ‰TODOS EXISTENTES ---
     async findUserHabitById(id, usuario_id) {
         return await UsuarioHabito.findOne({ where: { id, usuario_id } });
     }
@@ -404,7 +454,7 @@ class HabitRepository {
         return true;
     }
 
-    // --- MÉTODOS DE ADMINISTRACIÓN ---
+    // --- MÃ‰TODOS DE ADMINISTRACIÃ“N ---
     async adminFindAllHabits() {
         return await Habito.findAll({ include: [{ model: Categoria, as: 'categoria' }] });
     }
@@ -447,3 +497,4 @@ class HabitRepository {
 }
 
 module.exports = new HabitRepository();
+
