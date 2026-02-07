@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import AdminService from '../services/adminService';
 import { Button, LoadingScreen } from '../components/common';
 
 export default function AdminUsers() {
+    const navigate = useNavigate();
     const [usuarios, setUsuarios] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -49,6 +51,15 @@ export default function AdminUsers() {
     return (
         <div className="container mx-auto px-4 py-8">
             <div className="mb-8">
+                <button
+                            onClick={() => navigate('/admin')}
+                            className="inline-flex items-center gap-2 text-emerald-700 hover:text-emerald-800 text-lg font-semibold hover:underline"
+                        >
+                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                            </svg>
+                            Atras
+                        </button>
                 <h1 className="text-4xl font-bold text-gray-800">Gestionar Usuarios</h1>
                 <p className="text-gray-600 mt-2">Total: {usuarios.length} usuario(s)</p>
             </div>
