@@ -58,9 +58,9 @@ export default function AdminDashboard() {
                 )}
 
                 {stats && (
-                    <>
+                    <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-8">
                         {/* Stats Grid - Simplificado */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8 lg:col-start-2">
                             {/* Total Usuarios */}
                             <div className="bg-white p-6 rounded-xl shadow border-l-4 border-blue-500">
                                 <div className="flex justify-between items-center">
@@ -138,7 +138,7 @@ export default function AdminDashboard() {
                         </div>
 
                         {/* Top 5 Rachas y Hábitos Populares */}
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8 lg:col-start-2">
                             {/* Top 5 Rachas - Simplificado */}
                             <div className="bg-white rounded-xl shadow p-6">
                                 <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
@@ -212,9 +212,9 @@ export default function AdminDashboard() {
                         </div>
 
                         {/* Accesos Rápidos - Colores actualizados */}
-                        <div className="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-xl shadow p-6 border border-emerald-100">
+                        <div className="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-xl shadow p-6 border border-emerald-100 lg:col-start-1 lg:row-start-1 lg:row-span-2">
                             <h2 className="text-xl font-bold text-gray-800 mb-4">Accesos Rápidos</h2>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div className="grid grid-cols-1 gap-4">
                                 <a href="/admin/categorias" className="block p-4 bg-white rounded-lg shadow hover:shadow-lg transition border border-emerald-200">
                                     <h3 className="font-semibold text-emerald-700 mb-1">Gestionar Categorías</h3>
                                     <p className="text-sm text-emerald-600">Crear, editar o eliminar categorías de hábitos</p>
@@ -224,12 +224,13 @@ export default function AdminDashboard() {
                                     <p className="text-sm text-emerald-600">Administrar el catálogo global de hábitos</p>
                                 </a>
                                 <a href="/admin/usuarios" className="block p-4 bg-white rounded-lg shadow hover:shadow-lg transition border border-emerald-200">
+                                    
                                     <h3 className="font-semibold text-emerald-700 mb-1">Gestionar Usuarios</h3>
                                     <p className="text-sm text-emerald-600">Ver y administrar roles de usuarios</p>
                                 </a>
                             </div>
                         </div>
-                    </>
+                    </div>
                 )}
             </div>
         </div>
