@@ -1,17 +1,5 @@
 import React from 'react';
 
-/**
- * Componente Button reutilizable
- * 
- * Props:
- * - variant: 'primary' | 'secondary' | 'danger' | 'success' | 'ghost' (default: 'primary')
- * - size: 'sm' | 'md' | 'lg' (default: 'md')
- * - disabled: boolean (default: false)
- * - isLoading: boolean (default: false)
- * - onClick: function
- * - children: ReactNode
- * - className: string (clases adicionales)
- */
 export default function Button({
   variant = 'primary',
   size = 'md',
@@ -32,7 +20,8 @@ export default function Button({
     secondary: 'bg-gray-500 hover:bg-gray-600 text-white focus:ring-gray-500',
     danger: 'bg-red-500 hover:bg-red-600 text-white focus:ring-red-500',
     success: 'bg-green-500 hover:bg-green-600 text-white focus:ring-green-500',
-    ghost: 'bg-transparent border-2 border-gray-300 hover:border-gray-400 text-gray-700 hover:bg-gray-100 focus:ring-gray-300'
+    ghost: 'bg-transparent border-2 border-gray-300 hover:border-gray-400 text-gray-700 hover:bg-gray-100 focus:ring-gray-300',
+    outline: 'bg-transparent border-2 border-green-500 text-green-600 hover:bg-green-50 focus:ring-green-500' // ← AGREGAR
   };
 
   // Tamaños
