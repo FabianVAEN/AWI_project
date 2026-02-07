@@ -176,6 +176,135 @@ const usuarioController = {
         } catch (error) {
             res.status(500).json({ error: error.message });
         }
+    },
+    async actualizarPerfil(req, res) {
+        try {
+            const { username, primer_nombre, segundo_nombre, email } = req.body;
+            const updates = {};
+
+            if (typeof username !== 'undefined') updates.username = username;
+            if (typeof primer_nombre !== 'undefined') updates.primer_nombre = primer_nombre;
+            if (typeof segundo_nombre !== 'undefined') updates.segundo_nombre = segundo_nombre;
+            if (typeof email !== 'undefined') updates.email = email;
+
+            if (Object.keys(updates).length === 0) {
+                return res.status(400).json({ error: "No hay datos para actualizar" });
+            }
+
+            const usuario = await Usuario.findByPk(req.userId);
+            if (!usuario) {
+                return res.status(404).json({ error: "Usuario no encontrado" });
+            }
+
+            if (updates.email && updates.email !== usuario.email) {
+                const existeEmail = await Usuario.findOne({ where: { email: updates.email } });
+                if (existeEmail) {
+                    return res.status(400).json({ error: "El email ya esta registrado" });
+                }
+            }
+
+            if (updates.username && updates.username !== usuario.username) {
+                const existeUsername = await Usuario.findOne({ where: { username: updates.username } });
+                if (existeUsername) {
+                    return res.status(400).json({ error: "El usuario ya esta registrado" });
+                }
+            }
+
+            const actualizado = await usuario.update(updates);
+
+            const usuarioRespuesta = {
+                id: actualizado.id,
+                username: actualizado.username,
+                email: actualizado.email,
+                primer_nombre: actualizado.primer_nombre,
+                segundo_nombre: actualizado.segundo_nombre,
+                es_admin: actualizado.es_admin
+            };
+
+            res.json({ mensaje: "Perfil actualizado correctamente", usuario: usuarioRespuesta });
+        } catch (error) {
+            console.error('Error al actualizar perfil:', error);
+
+            if (error.name === 'SequelizeValidationError') {
+                const messages = (error.errors || []).map(e => e.message);
+                return res.status(400).json({
+                    error: messages[0] || "Datos invalidos"
+                });
+            }
+
+            if (error.name === 'SequelizeUniqueConstraintError') {
+                return res.status(400).json({
+                    error: "Email o usuario ya registrado"
+                });
+            }
+
+            res.status(500).json({ error: "Error en el servidor al actualizar perfil" });
+        }
+    },
+
+    async actualizarPerfil(req, res) {
+        try {
+            const { username, primer_nombre, segundo_nombre, email } = req.body;
+            const updates = {};
+
+            if (typeof username !== 'undefined') updates.username = username;
+            if (typeof primer_nombre !== 'undefined') updates.primer_nombre = primer_nombre;
+            if (typeof segundo_nombre !== 'undefined') updates.segundo_nombre = segundo_nombre;
+            if (typeof email !== 'undefined') updates.email = email;
+
+            if (Object.keys(updates).length === 0) {
+                return res.status(400).json({ error: "No hay datos para actualizar" });
+            }
+
+            const usuario = await Usuario.findByPk(req.userId);
+            if (!usuario) {
+                return res.status(404).json({ error: "Usuario no encontrado" });
+            }
+
+            if (updates.email && updates.email !== usuario.email) {
+                const existeEmail = await Usuario.findOne({ where: { email: updates.email } });
+                if (existeEmail) {
+                    return res.status(400).json({ error: "El email ya esta registrado" });
+                }
+            }
+
+            if (updates.username && updates.username !== usuario.username) {
+                const existeUsername = await Usuario.findOne({ where: { username: updates.username } });
+                if (existeUsername) {
+                    return res.status(400).json({ error: "El usuario ya esta registrado" });
+                }
+            }
+
+            const actualizado = await usuario.update(updates);
+
+            const usuarioRespuesta = {
+                id: actualizado.id,
+                username: actualizado.username,
+                email: actualizado.email,
+                primer_nombre: actualizado.primer_nombre,
+                segundo_nombre: actualizado.segundo_nombre,
+                es_admin: actualizado.es_admin
+            };
+
+            res.json({ mensaje: "Perfil actualizado correctamente", usuario: usuarioRespuesta });
+        } catch (error) {
+            console.error('Error al actualizar perfil:', error);
+
+            if (error.name === 'SequelizeValidationError') {
+                const messages = (error.errors || []).map(e => e.message);
+                return res.status(400).json({
+                    error: messages[0] || "Datos invalidos"
+                });
+            }
+
+            if (error.name === 'SequelizeUniqueConstraintError') {
+                return res.status(400).json({
+                    error: "Email o usuario ya registrado"
+                });
+            }
+
+            res.status(500).json({ error: "Error en el servidor al actualizar perfil" });
+        }
     }
 };
 

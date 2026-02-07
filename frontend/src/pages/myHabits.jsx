@@ -323,7 +323,6 @@ export default function MyHabits() {
                                             </div>
 
                                             {/* Botones de acción */}
-                                            {/* Botones de acción */}
                                             <div className="flex gap-2 pt-4 border-t border-gray-100">
                                                 <Button
                                                     onClick={() => marcarCompletado(habito.id)}
