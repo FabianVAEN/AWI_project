@@ -142,7 +142,7 @@ export default function AdminDashboard() {
                             {/* Top 5 Rachas - Simplificado */}
                             <div className="bg-white rounded-xl shadow p-6">
                                 <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-                                    <span className="text-2xl">🔥</span> Top 5 Rachas
+                                    <span className="text-2xl">🔥</span> Rachas más seguidas
                                 </h2>
                                 {stats.rankingRachas && stats.rankingRachas.length > 0 ? (
                                     <div className="space-y-4">
@@ -152,7 +152,6 @@ export default function AdminDashboard() {
                                                     {index + 1}
                                                 </div>
                                                 <div className="flex-1 min-w-0">
-                                                    <p className="font-semibold text-gray-800 truncate">{getUsername(item)}</p>
                                                     <p className="text-sm text-gray-600 truncate">{getHabitName(item)}</p>
                                                 </div>
                                                 <div className="text-right">

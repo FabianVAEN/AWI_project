@@ -146,7 +146,7 @@ const seed = async () => {
             {
                 username: 'fabian',
                 primer_nombre: 'Fabian',
-                segundo_nombre: 'Andrés',
+                segundo_nombre: 'Vega',
                 email: 'fabian@test.com',
                 password: password,
                 es_admin: false

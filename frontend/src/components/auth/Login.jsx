@@ -32,11 +32,6 @@ export default function Login() {
             setLoading(true);
             await AuthService.login(formData); 
             navigate('/');
-            // if (response.token) {
-            //     localStorage.setItem('token', response.token);
-            //     localStorage.setItem('user', JSON.stringify(response.usuario));
-            //     navigate('/');
-            // }
         } catch (err) {
             setError(err.message || 'Error al iniciar sesión');
         } finally {
@@ -45,60 +40,76 @@ export default function Login() {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 to-cyan-50 py-12 px-4">
-            <Card className="max-w-md w-full">
-                <div className="text-center mb-8">
-                    <h1 className="text-3xl font-bold text-gray-800">Iniciar Sesión</h1>
-                    <p className="text-gray-600 mt-2">Ingresa a tu cuenta para continuar con tus hábitos</p>
+        <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 py-8 px-4">
+            <div className="max-w-7xl mx-auto">
+                {/* Banner de bienvenida - Similar al Home.jsx */}
+                <div className="text-center mb-12">
+                    <h1 className="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-cyan-600 mb-2">
+                        Bienvenido a AWI
+                    </h1>
+                    <p className="text-gray-600 text-lg">Construye hábitos saludables y sostenibles</p>
                 </div>
 
-                {error && (
-                    <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg">
-                        {error}
-                    </div>
-                )}
+                {/* Contenido principal centrado */}
+                <div className="flex justify-center">
+                    <Card className="max-w-md w-full">
+                        <div className="text-center mb-8">
+                            <h2 className="text-2xl font-semibold text-gray-800">Iniciar Sesión</h2>
+                            <p className="text-gray-600 mt-2">Ingresa a tu cuenta para continuar con tus hábitos</p>
+                        </div>
 
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    <Input
-                        label="Email"
-                        type="email"
-                        name="email"
-                        value={formData.email}
-                        onChange={handleChange}
-                        maxLength={30}
-                        required
-                    />
+                        {error && (
+                            <div className="mb-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg flex items-center gap-2">
+                                <span>⚠️</span>
+                                {error}
+                            </div>
+                        )}
 
-                    <Input
-                        label="Contraseña"
-                        type="password"
-                        name="password"
-                        value={formData.password}
-                        onChange={handleChange}
-                        minLength={6}
-                        maxLength={30}
-                        required
-                    />
+                        <form onSubmit={handleSubmit} className="space-y-6">
+                            <Input
+                                label="Email"
+                                type="email"
+                                name="email"
+                                value={formData.email}
+                                onChange={handleChange}
+                                maxLength={30}
+                                required
+                                placeholder="ejemplo@email.com"
+                            />
 
-                    <Button
-                        type="submit"
-                        variant="primary"
-                        className="w-full"
-                        isLoading={loading}
-                    >
-                        Iniciar Sesión
-                    </Button>
-                </form>
+                            <Input
+                                label="Contraseña"
+                                type="password"
+                                name="password"
+                                value={formData.password}
+                                onChange={handleChange}
+                                minLength={6}
+                                maxLength={30}
+                                required
+                                placeholder="••••••••"
+                            />
 
-                <div className="mt-6 text-center">
-                    <p className="text-gray-600">
-                        ¿No tienes una cuenta?{' '}
-                        <Link to="/register" className="text-emerald-600 hover:text-emerald-700 font-medium">
-                            Regístrate aquí
-                        </Link>
-                    </p>
+                            <Button
+                                type="submit"
+                                variant="primary"
+                                className="w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 shadow-lg hover:shadow-xl transition-all duration-300"
+                                isLoading={loading}
+                            >
+                                Iniciar Sesión
+                            </Button>
+                        </form>
+
+                        <div className="mt-8 pt-6 border-t border-gray-200 text-center">
+                            <p className="text-gray-600">
+                                ¿No tienes una cuenta?{' '}
+                                <Link to="/register" className="text-emerald-600 hover:text-emerald-700 font-medium hover:underline">
+                                    Regístrate aquí
+                                </Link>
+                            </p>
+                        </div>
+                    </Card>
                 </div>
-            </Card>
+            </div>
         </div>
     );
 }
